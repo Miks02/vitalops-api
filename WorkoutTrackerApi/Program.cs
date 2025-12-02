@@ -1,7 +1,9 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WorkoutTrackerApi.Data;
 using WorkoutTrackerApi.Models;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +20,14 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
     options.Password.RequireLowercase = false;
     options.Password.RequireUppercase = false;
 }).AddEntityFrameworkStores<AppDbContext>();
-builder.Services.AddControllers();
+
+
+builder.Services.AddControllers(options =>
+{
+    options.ModelValidatorProviders.Clear();
+});
+
+builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
 builder.Services.AddOpenApi();
 

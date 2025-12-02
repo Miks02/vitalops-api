@@ -7,6 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="FluentValidation" Version="12.1.0" />
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0"/>
@@ -20,9 +22,8 @@
 
     <ItemGroup>
       <Folder Include="Controllers\" />
-      <Folder Include="DTO\" />
-      <Folder Include="Services\Implementations\" />
-      <Folder Include="Services\Interfaces\" />
+      <Folder Include="DTO\JWT\" />
+      <Folder Include="DTO\User\" />
       <Folder Include="Services\Results\" />
     </ItemGroup>
 
