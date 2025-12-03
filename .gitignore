@@ -53,6 +53,7 @@ launchSettings.json
 # Test results
 TestResults/
 .trx
+*.http
 
 # Entity Framework Core migrations history (if used)
 EFMigrations.sql
