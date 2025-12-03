@@ -10,7 +10,9 @@ public interface IUserService
 
     Task<User?> GetUserByUserNameAsync(string username);
 
-    Task<User?> GetUserByEmail(string email);
+    Task<User?> GetUserByEmailAsync(string email);
+
+    Task<UserWithRolesDto> GetUserWithRolesAsync(string username);
 
     Task<ServiceResult> DeleteUserAsync(User user);
 

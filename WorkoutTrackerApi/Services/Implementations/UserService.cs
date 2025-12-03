@@ -25,9 +25,32 @@ public class UserService : IUserService
         return await _userManager.FindByNameAsync(username);
     }
 
-    public async Task<User?> GetUserByEmail(string email)
+    public async Task<User?> GetUserByEmailAsync(string email)
     {
         return await _userManager.FindByEmailAsync(email);
+    }
+
+    public async Task<UserWithRolesDto> GetUserWithRolesAsync(string username)
+    {
+        var user = await GetUserByUserNameAsync(username);
+
+        if (user is null)
+            throw new ArgumentNullException(nameof(username), "User with provided username has not been found");
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        var dto = new UserWithRolesDto()
+        {
+            UserId = user.Id,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            UserName = user.UserName!,
+            Email = user.Email!,
+            Roles = roles.AsReadOnly()
+        };
+
+        return dto;
+
     }
 
     public async Task<ServiceResult> DeleteUserAsync(User user)
