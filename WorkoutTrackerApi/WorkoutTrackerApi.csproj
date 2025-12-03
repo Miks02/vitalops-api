@@ -24,7 +24,6 @@
       <Folder Include="Controllers\" />
       <Folder Include="DTO\JWT\" />
       <Folder Include="DTO\User\" />
-      <Folder Include="Services\Results\" />
     </ItemGroup>
 
 </Project>
