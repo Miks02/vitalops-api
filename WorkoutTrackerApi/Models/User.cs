@@ -19,6 +19,8 @@ public class User : IdentityUser
     public int Age { get; set; }
     public int? DailyCalorieGoal { get; set; }
 
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
     public ICollection<Workout> Workouts { get; set; } = [];
     public ICollection<CalorieEntry> CalorieEntries { get; set; } = [];
 
