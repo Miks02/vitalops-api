@@ -1,3 +1,4 @@
+using Microsoft.Build.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using WorkoutTrackerApi.Models;
@@ -31,5 +32,23 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.PhoneNumber)
             .HasMaxLength(20);
+
+        builder.HasIndex(p => p.UserName)
+            .IsUnique();
+
+        builder.HasIndex(p => p.Email)
+            .IsUnique();
+
+        builder
+            .HasMany(u => u.Workouts)
+            .WithOne(w => w.User)
+            .HasForeignKey(w => w.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasMany(u => u.CalorieEntries)
+            .WithOne(c => c.User)
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
