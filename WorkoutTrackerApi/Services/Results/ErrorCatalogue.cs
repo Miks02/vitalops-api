@@ -72,6 +72,9 @@ public sealed class Error
 
         public static Error ExpiredToken(string message = "Refresh token has expired")
             => new("Auth.ExpiredToken", message);
+
+        public static Error Unauthorized(string message = "No permission to access requested content")
+            => new("Auth.Unauthorized", message);
     }
     
     public static class User

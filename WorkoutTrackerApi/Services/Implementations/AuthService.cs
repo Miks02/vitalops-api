@@ -25,10 +25,10 @@ public class AuthService : BaseService<AuthService>,IAuthService
         UserManager<User> userManager, 
         RoleManager<IdentityRole> roleManager, 
         IUserService userService,
-        IHttpContextAccessor http,
+        ICurrentUserService currentUser,
         ILogger<AuthService> logger,
         IConfiguration configuration
-        ) : base(http, logger)
+        ) : base(currentUser, logger)
     {
         _userManager = userManager;
         _roleManager = roleManager;
