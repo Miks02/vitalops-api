@@ -38,7 +38,7 @@ namespace WorkoutTrackerApi.Controllers
             
             if (!result.IsSucceeded)
             {
-                return BadRequest(new { errors = result.Errors.ToArray()});
+                return Unauthorized(new { errors = result.Errors.ToArray()});
             }
 
             return Ok(new { message = "Login completed", data = result.Payload });

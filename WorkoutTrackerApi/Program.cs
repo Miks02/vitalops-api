@@ -8,6 +8,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 using WorkoutTrackerApi.Filters;
 using WorkoutTrackerApi.Services.Implementations;
 using WorkoutTrackerApi.Services.Interfaces;
@@ -36,7 +37,8 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 builder.Services
     .AddScoped<IUserService, UserService>()
     .AddScoped<IAuthService, AuthService>()
-    .AddScoped<ICurrentUserService, CurrentUserService>();
+    .AddScoped<ICurrentUserService, CurrentUserService>()
+    .AddScoped<IWorkoutService, WorkoutService>();
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
@@ -70,16 +72,16 @@ builder.Services.AddControllers(options =>
 
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
-
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi("v1");
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
+    
 }
-
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
