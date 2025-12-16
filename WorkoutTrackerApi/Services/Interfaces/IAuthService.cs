@@ -7,9 +7,9 @@ namespace WorkoutTrackerApi.Services.Interfaces;
 
 public interface IAuthService
 {
-    Task<ServiceResult<TokenResponseDto>> LoginAsync(LoginRequestDto request);
+    Task<ServiceResult<AuthResponseDto>> LoginAsync(LoginRequestDto request);
 
-    Task<ServiceResult<UserDto>> RegisterAsync(RegisterRequestDto request);
+    Task<ServiceResult<AuthResponseDto>> RegisterAsync(RegisterRequestDto request);
 
     Task<ServiceResult<TokenResponseDto>> RotateAuthTokens(string refreshToken);
 }
