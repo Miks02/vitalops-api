@@ -16,7 +16,7 @@ public sealed class Error
         Code = code;
         Description = description;
     }
-
+    
     public static class General
     {
         public static Error IdentityError(string message = "Error occurred while doing an identity operation")
@@ -72,9 +72,6 @@ public sealed class Error
 
         public static Error ExpiredToken(string message = "Refresh token has expired")
             => new("Auth.ExpiredToken", message);
-
-        public static Error Unauthorized(string message = "No permission to access requested content")
-            => new("Auth.Unauthorized", message);
     }
     
     public static class User
@@ -107,10 +104,33 @@ public sealed class Error
             return new Error("User.NotFound", message);
         }
     }
-
     public static class Database
     {
-        public static Error DatabaseError(string message = "Error happened while adding an entity to the database")
-            => new("Database.AddFailed", message);
+        public static Error ConnectionFailed(string message = "Failed to connect to the database")
+            => new("Database.ConnectionFailed", message);
+
+        public static Error OperationFailed(string message = "Database operation failed")
+            => new("Database.OperationFailed", message);
+
+        public static Error SaveChangesFailed(string message = "Failed to save changes to the database")
+            => new("Database.SaveChangesFailed", message);
+
+        public static Error ConcurrencyError(string message = "Concurrency conflict detected")
+            => new("Database.ConcurrencyError", message);
+
+        public static Error TransactionFailed(string message = "Database transaction failed")
+            => new("Database.TransactionFailed", message);
+
+        public static Error ConstraintViolation(string constraintName = "")
+        {
+            string message = string.IsNullOrWhiteSpace(constraintName)
+                ? "Database constraint violation"
+                : $"Database constraint '{constraintName}' violated";
+
+            return new Error("Database.ConstraintViolation", message);
+        }
+
+        public static Error TimeoutError(string message = "Database operation timed out")
+            => new("Database.TimeoutError", message);
     }
 }
