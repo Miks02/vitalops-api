@@ -30,7 +30,8 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
         options.User.RequireUniqueEmail = true;
         options.Password.RequireLowercase = false;
         options.Password.RequireUppercase = false;
-    }).AddEntityFrameworkStores<AppDbContext>()
+    })
+    .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
 
@@ -75,7 +76,6 @@ builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 builder.Services.AddOpenApi("v1");
 
 var app = builder.Build();
-
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
