@@ -80,6 +80,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>();
+    options.Filters.Add<ApiResponseTransformerFilter>();
 });
 
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
