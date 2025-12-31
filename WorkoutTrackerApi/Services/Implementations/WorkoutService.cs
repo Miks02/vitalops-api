@@ -17,7 +17,6 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
 
     public WorkoutService
         (   
-            ICurrentUserService currentUser,
             ILogger<WorkoutService> logger,
             AppDbContext context) : base(logger
         )
@@ -25,10 +24,10 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         _context = context;
     }
 
-    public async Task<ServiceResult<PagedResult<WorkoutDto>>> GetAllWorkoutsPagedAsync(WorkoutQueryParams queryParams, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<PagedResult<WorkoutDto>>> GetUserWorkoutsPagedAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
     {
 
-        var query = QueryBuilder(queryParams);
+        var query = QueryBuilder(queryParams, userId);
         
         IQueryable<WorkoutDto> finalQuery = query
             .Skip((queryParams.Page - 1) * queryParams.PageSize)
@@ -129,15 +128,15 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         return ServiceResult.Success();
     }
     
-    private IQueryable<Workout> QueryBuilder(WorkoutQueryParams queryParams)
+    private IQueryable<Workout> QueryBuilder(QueryParams queryParams, string userId)
     {
         var query = _context.Workouts
             .OrderByDescending(w => w.CreatedAt)
             .AsNoTracking();
             
 
-        if (!string.IsNullOrWhiteSpace(queryParams.UserId))
-            query = query.Where(w => w.UserId == queryParams.UserId);
+        if (!string.IsNullOrWhiteSpace(userId))
+            query = query.Where(w => w.UserId == userId);
 
         if (!string.IsNullOrWhiteSpace(queryParams.Sort))
         {
