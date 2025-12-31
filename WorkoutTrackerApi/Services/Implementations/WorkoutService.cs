@@ -24,12 +24,12 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         _context = context;
     }
 
-    public async Task<ServiceResult<PagedResult<WorkoutDto>>> GetUserWorkoutsPagedAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<PagedResult<WorkoutDetailsDto>>> GetUserWorkoutsPagedAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
     {
 
         var query = QueryBuilder(queryParams, userId);
         
-        IQueryable<WorkoutDto> finalQuery = query
+        IQueryable<WorkoutDetailsDto> finalQuery = query
             .Skip((queryParams.Page - 1) * queryParams.PageSize)
             .Take(queryParams.PageSize)
             .Select(ProjectToWorkoutDto());
@@ -37,13 +37,13 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         int totalWorkouts = await query.CountAsync(cancellationToken);
         var pagedWorkouts = await finalQuery.ToListAsync(cancellationToken);
 
-        var pagedResult = new PagedResult<WorkoutDto>(pagedWorkouts, queryParams.Page, queryParams.PageSize, totalWorkouts);
+        var pagedResult = new PagedResult<WorkoutDetailsDto>(pagedWorkouts, queryParams.Page, queryParams.PageSize, totalWorkouts);
 
-        return ServiceResult<PagedResult<WorkoutDto>>.Success(pagedResult);
+        return ServiceResult<PagedResult<WorkoutDetailsDto>>.Success(pagedResult);
 
     }
 
-    public async Task<ServiceResult<WorkoutDto>> GetWorkoutByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<WorkoutDetailsDto>> GetWorkoutByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var workout = await _context.Workouts
             .Where(w => w.Id == id)
@@ -54,13 +54,13 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         if (workout is null)
         {
             LogInformation($"Workout with id {id} not found");
-            return ServiceResult<WorkoutDto>.Failure(Error.Resource.NotFound("Workout"));
+            return ServiceResult<WorkoutDetailsDto>.Failure(Error.Resource.NotFound("Workout"));
         }
         
-        return ServiceResult<WorkoutDto>.Success(workout);
+        return ServiceResult<WorkoutDetailsDto>.Success(workout);
     }
     
-    public async Task<ServiceResult<WorkoutDto>> AddWorkoutAsync(WorkoutCreateRequest request, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<WorkoutDetailsDto>> AddWorkoutAsync(WorkoutCreateRequest request, CancellationToken cancellationToken = default)
     {
 
         var newWorkout = new Workout()
@@ -92,7 +92,7 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         catch (DbUpdateException ex)
         {
             LogCritical("CRITICAL: Error happened while trying to add workout to the database", ex);
-            return ServiceResult<WorkoutDto>.Failure(Error.Database.SaveChangesFailed());
+            return ServiceResult<WorkoutDetailsDto>.Failure(Error.Database.SaveChangesFailed());
         }
         
 
@@ -100,7 +100,7 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
 
         var workoutDto = MapToWorkoutDto().Invoke(newWorkout);
         
-        return ServiceResult<WorkoutDto>.Success(workoutDto);
+        return ServiceResult<WorkoutDetailsDto>.Success(workoutDto);
     }
 
     public async Task<ServiceResult> DeleteWorkoutAsync(int id, string userId, CancellationToken cancellationToken = default)
@@ -121,7 +121,7 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         catch (DbUpdateException ex)
         {
             LogCritical("CRITICAL: Error happened deleting workout from the database", ex);
-            return ServiceResult<WorkoutDto>.Failure(Error.Database.SaveChangesFailed());
+            return ServiceResult<WorkoutDetailsDto>.Failure(Error.Database.SaveChangesFailed());
         }
         
         LogInformation("Workout deleted successfully");
@@ -161,9 +161,9 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
 
     }
  
-    private static Expression<Func<Workout, WorkoutDto>> ProjectToWorkoutDto()
+    private static Expression<Func<Workout, WorkoutDetailsDto>> ProjectToWorkoutDto()
     {
-        return w => new WorkoutDto()
+        return w => new WorkoutDetailsDto()
         {
             Id = w.Id,
             Name = w.Name,
@@ -190,9 +190,9 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
 
     }
 
-    private static Func<Workout, WorkoutDto> MapToWorkoutDto()
+    private static Func<Workout, WorkoutDetailsDto> MapToWorkoutDto()
     {
-        return w => new WorkoutDto
+        return w => new WorkoutDetailsDto
         {
             Id = w.Id,
             Name = w.Name,

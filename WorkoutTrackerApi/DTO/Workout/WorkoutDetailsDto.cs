@@ -2,7 +2,7 @@ using WorkoutTrackerApi.DTO.ExerciseEntry;
 
 namespace WorkoutTrackerApi.DTO.Workout;
 
-public class WorkoutDto
+public class WorkoutDetailsDto
 {
     public int Id { get; set; }
     public string Name { get; set; } = null!;
