@@ -1,13 +1,13 @@
-namespace WorkoutTrackerApi.DTO.Workout;
+namespace WorkoutTrackerApi.DTO.Global;
 
-public class WorkoutQueryParams
+public class QueryParams
 {
     public int Page { get; set; }
     public int PageSize { get; set; } 
     public string? Search { get; set; }
     public string Sort { get; set; }
 
-    public WorkoutQueryParams(int page, int pageSize, string? search, string sort)
+    public QueryParams(int page, int pageSize, string? search, string sort)
     {
         Page = page;
         PageSize = pageSize;
