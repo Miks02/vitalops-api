@@ -2,7 +2,9 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkoutTrackerApi.DTO.Auth;
+using WorkoutTrackerApi.DTO.Global;
 using WorkoutTrackerApi.Services.Interfaces;
+using WorkoutTrackerApi.Extensions;
 
 namespace WorkoutTrackerApi.Controllers
 {
@@ -23,12 +25,7 @@ namespace WorkoutTrackerApi.Controllers
 
             var result = await _authService.RegisterAsync(request);
 
-            if (!result.IsSucceeded)
-            {
-                return BadRequest(new { errors = result.Errors.ToArray()});
-            }
-
-            return Ok(new { message = "Registration completed", data = result.Payload });
+            return result.ToActionResult();
 
         }
 
@@ -36,14 +33,9 @@ namespace WorkoutTrackerApi.Controllers
         public async Task<IActionResult> Login(LoginRequestDto request)
         {
             var result = await _authService.LoginAsync(request);
-            
-            if (!result.IsSucceeded)
-            {
-                return Unauthorized(new { errors = result.Errors.ToArray()});
-            }
 
-            return Ok(new { message = "Login completed", data = result.Payload });
-            
+            return result.ToActionResult();
+
         }
 
         [Authorize]
@@ -51,11 +43,8 @@ namespace WorkoutTrackerApi.Controllers
         public async Task<IActionResult> Logout()
         {
             var result = await _authService.LogoutAsync(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            if (!result.IsSucceeded)
-            {
-                return BadRequest(new { errors = result.Errors.ToArray()});
-            }
-            return Ok(new { message = "Logout completed" });
+
+            return result.ToActionResult();
         }
         
         [Authorize]
@@ -70,20 +59,7 @@ namespace WorkoutTrackerApi.Controllers
         {
             var result = await _authService.RotateAuthTokens(request.RefreshToken);
 
-            if (!result.IsSucceeded)
-            {
-                foreach (var error in result.Errors)
-                {
-                    if (error.Code == "User.NotFound")
-                        return NotFound(error.Description + request.RefreshToken);
-                    if (error.Code == "Auth.JwtError")
-                        return BadRequest(error.Description);
-                }
-                return BadRequest();
-                
-            }
-
-            return Ok(result.Payload);
+            return result.ToActionResult();
         }
         
     }

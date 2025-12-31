@@ -106,7 +106,7 @@ public class AuthService : BaseService<AuthService>, IAuthService
         if (user is null)
         {
             LogError($"Failed sign in for user with email: {request.Email}. User not found");
-            return ServiceResult<AuthResponseDto>.Failure(Error.User.NotFound());
+            return ServiceResult<AuthResponseDto>.Failure(Error.Auth.LoginFailed("Incorrect email or password"));
         }
 
         if (!await _userManager.CheckPasswordAsync(user, request.Password))
