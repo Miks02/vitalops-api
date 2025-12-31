@@ -13,7 +13,7 @@ public static class ServiceResultExtensions
             return new OkObjectResult(ApiResponse.Success(successMessage));
         }
 
-        return new ObjectResult(ApiResponse.Failure("An error occurred", result.Errors.First()));
+        return new ObjectResult(ApiResponse.Failure(result.Errors.First()));
     }
     
     public static IActionResult ToActionResult<T>(this ServiceResult<T> result, string successMessage = "Success")
@@ -24,6 +24,6 @@ public static class ServiceResultExtensions
 
         }
 
-        return new ObjectResult(ApiResponse.Failure("An error occurred", result.Errors.First()));
+        return new ObjectResult(ApiResponse.Failure(result.Errors.First()));
     }
 }

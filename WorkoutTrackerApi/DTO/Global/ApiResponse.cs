@@ -21,9 +21,9 @@ public class ApiResponse
         Message = message;
     }
 
-    public static ApiResponse Success(string message) => new(true, message, null);
+    public static ApiResponse Success(string message = "Success") => new(true, message, null);
 
-    public static ApiResponse Failure(string message, Error error)
+    public static ApiResponse Failure(Error error, string message = "Error occurred")
     {
         if (error is null)
             throw new ArgumentException("Error is required for responses that has failed");
