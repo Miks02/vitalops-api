@@ -5,6 +5,7 @@ using WorkoutTrackerApi.DTO.ExerciseEntry;
 using WorkoutTrackerApi.DTO.Global;
 using WorkoutTrackerApi.DTO.SetEntry;
 using WorkoutTrackerApi.DTO.Workout;
+using WorkoutTrackerApi.Enums;
 using WorkoutTrackerApi.Models;
 using WorkoutTrackerApi.Services.Interfaces;
 using WorkoutTrackerApi.Services.Results;
@@ -24,22 +25,30 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         _context = context;
     }
 
-    public async Task<ServiceResult<PagedResult<WorkoutDetailsDto>>> GetUserWorkoutsPagedAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<WorkoutPageDto>> GetUserWorkoutsPagedAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
     {
 
         var query = QueryBuilder(queryParams, userId);
         
-        IQueryable<WorkoutDetailsDto> finalQuery = query
+        IQueryable<WorkoutListItemDto> finalQuery = query
             .Skip((queryParams.Page - 1) * queryParams.PageSize)
             .Take(queryParams.PageSize)
             .Select(ProjectToWorkoutDto());
 
         int totalWorkouts = await query.CountAsync(cancellationToken);
         var pagedWorkouts = await finalQuery.ToListAsync(cancellationToken);
+        var workoutSummary = await BuildWorkoutSummary();
 
-        var pagedResult = new PagedResult<WorkoutDetailsDto>(pagedWorkouts, queryParams.Page, queryParams.PageSize, totalWorkouts);
+        var pagedResult = new PagedResult<WorkoutListItemDto>(pagedWorkouts, queryParams.Page, queryParams.PageSize, totalWorkouts);
 
-        return ServiceResult<PagedResult<WorkoutDetailsDto>>.Success(pagedResult);
+        var workoutPage = new WorkoutPageDto
+        {
+            PagedWorkouts = pagedResult,
+            WorkoutSummary = workoutSummary
+        };
+
+
+        return ServiceResult<WorkoutPageDto>.Success(workoutPage);
 
     }
 
@@ -48,16 +57,18 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         var workout = await _context.Workouts
             .Where(w => w.Id == id)
             .AsNoTracking()
-            .Select(ProjectToWorkoutDto())
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync();
 
         if (workout is null)
         {
             LogInformation($"Workout with id {id} not found");
             return ServiceResult<WorkoutDetailsDto>.Failure(Error.Resource.NotFound("Workout"));
         }
-        
-        return ServiceResult<WorkoutDetailsDto>.Success(workout);
+
+       var workoutDto = MapToWorkoutDetailsDto().Invoke(workout);
+
+       return ServiceResult<WorkoutDetailsDto>.Success(workoutDto);
+       throw new NotImplementedException();
     }
     
     public async Task<ServiceResult<WorkoutDetailsDto>> AddWorkoutAsync(WorkoutCreateRequest request, CancellationToken cancellationToken = default)
@@ -68,6 +79,7 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
             Name = request.Name,
             Notes = request.Notes,
             UserId = request.UserId,
+            WorkoutDate = request.WorkoutDate,
             ExerciseEntries = request.ExerciseEntries.Select(e => new ExerciseEntry()
             {
                 Name = e.Name,
@@ -166,38 +178,43 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         return query;
 
     }
- 
-    private static Expression<Func<Workout, WorkoutDetailsDto>> ProjectToWorkoutDto()
+
+    private async Task<WorkoutSummaryDto> BuildWorkoutSummary() 
     {
-        return w => new WorkoutDetailsDto()
+        var lastWorkoutDate = await _context.Workouts
+            .MaxAsync(w => w.WorkoutDate);
+
+
+        var exerciseCount = await _context.Workouts
+            .Select(w => w.ExerciseEntries)
+            .CountAsync();
+
+        var favoriteExerciseType = await _context.Workouts
+            .SelectMany(w => w.ExerciseEntries)
+            .GroupBy(e => e.ExerciseType)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.Key)
+            .FirstOrDefaultAsync();
+
+
+        return new WorkoutSummaryDto
+        {
+            ExerciseCount = exerciseCount,
+            LastWorkoutDate = lastWorkoutDate,
+            FavoriteExerciseType = favoriteExerciseType
+        };
+
+    }
+ 
+    private static Expression<Func<Workout, WorkoutListItemDto>> ProjectToWorkoutDto()
+    {
+        return w => new WorkoutListItemDto()
         {
             Id = w.Id,
             Name = w.Name,
-            Notes = w.Notes,
-            UserId = w.UserId,
-            CreatedAt = w.CreatedAt,
-            Exercises = w.ExerciseEntries.Select(e => new ExerciseEntryDto()
-            {
-                Id = e.Id,
-                Name = e.Name,
-                ExerciseType = e.ExerciseType,
-                CardioType = e.CardioType,
-                AvgHeartRate = e.AvgHeartRate,
-                MaxHeartRate = e.MaxHeartRate,
-                CaloriesBurned = e.CaloriesBurned,
-                DistanceKm = e.DistanceKm,
-                Duration = e.Duration,
-                PaceMinPerKm = e.PaceMinPerKm,
-                WorkIntervalSec = e.WorkIntervalSec,
-                RestIntervalSec = e.RestIntervalSec,
-                IntervalsCount = e.IntervalsCount,
-                Sets = e.Sets.Select(s => new SetEntryDto()
-                {
-                    Id = s.Id,
-                    Reps = s.Reps,
-                    WeightKg = s.WeightKg
-                })
-            }).ToList()
+            ExerciseCount = w.ExerciseEntries.Count,
+            SetCount = w.ExerciseEntries.Select(e => e.Sets).Count(),
+            WorkoutDate = w.WorkoutDate
         };
 
     }
