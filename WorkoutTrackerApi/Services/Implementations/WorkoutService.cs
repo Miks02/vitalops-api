@@ -68,7 +68,7 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
        var workoutDto = MapToWorkoutDetailsDto().Invoke(workout);
 
        return ServiceResult<WorkoutDetailsDto>.Success(workoutDto);
-       throw new NotImplementedException();
+
     }
     
     public async Task<ServiceResult<WorkoutDetailsDto>> AddWorkoutAsync(WorkoutCreateRequest request, CancellationToken cancellationToken = default)
