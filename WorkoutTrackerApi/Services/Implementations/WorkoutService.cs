@@ -36,7 +36,7 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
 
         int totalWorkouts = await query.CountAsync(cancellationToken);
         var pagedWorkouts = await finalQuery.ToListAsync(cancellationToken);
-        var workoutSummary = await BuildWorkoutSummary();
+        var workoutSummary = await BuildWorkoutSummary(userId);
 
         var pagedResult = new PagedResult<WorkoutListItemDto>(pagedWorkouts, queryParams.Page, queryParams.PageSize, totalWorkouts);
 
@@ -64,9 +64,9 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
             return ServiceResult<WorkoutDetailsDto>.Failure(Error.Resource.NotFound("Workout"));
         }
 
-       var workoutDto = MapToWorkoutDetailsDto().Invoke(workout);
+        var workoutDto = MapToWorkoutDetailsDto().Invoke(workout);
 
-       return ServiceResult<WorkoutDetailsDto>.Success(workoutDto);
+        return ServiceResult<WorkoutDetailsDto>.Success(workoutDto);
 
     }
     
@@ -178,16 +178,22 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
 
     }
 
-    private async Task<WorkoutSummaryDto> BuildWorkoutSummary() 
+    private async Task<WorkoutSummaryDto> BuildWorkoutSummary(string userId) 
     {
         DateTime? lastWorkoutDate = await _context.Workouts
+            .AsNoTracking()
+            .Where(w => w.UserId == userId)
             .MaxAsync(w => (DateTime?)w.WorkoutDate);
 
         var exerciseCount = await _context.Workouts
+            .AsNoTracking()
+            .Where(w => w.UserId == userId)
             .SelectMany(w => w.ExerciseEntries)
             .CountAsync();
 
         var favoriteExerciseType = await _context.Workouts
+            .AsNoTracking()
+            .Where(w => w.UserId == userId)
             .SelectMany(w => w.ExerciseEntries)
             .GroupBy(e => e.ExerciseType)
             .OrderByDescending(g => g.Count())
