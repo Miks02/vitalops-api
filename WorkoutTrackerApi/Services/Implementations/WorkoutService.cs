@@ -1,12 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 using System.Linq.Expressions;
 using WorkoutTrackerApi.Data;
 using WorkoutTrackerApi.DTO.ExerciseEntry;
 using WorkoutTrackerApi.DTO.Global;
 using WorkoutTrackerApi.DTO.SetEntry;
 using WorkoutTrackerApi.DTO.Workout;
-using WorkoutTrackerApi.Enums;
 using WorkoutTrackerApi.Models;
 using WorkoutTrackerApi.Services.Interfaces;
 using WorkoutTrackerApi.Services.Results;
@@ -34,7 +32,7 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         IQueryable<WorkoutListItemDto> finalQuery = query
             .Skip((queryParams.Page - 1) * queryParams.PageSize)
             .Take(queryParams.PageSize)
-            .Select(ProjectToWorkoutDto());
+            .Select(ProjectToWorkoutListItemDto());
 
         int totalWorkouts = await query.CountAsync(cancellationToken);
         var pagedWorkouts = await finalQuery.ToListAsync(cancellationToken);
@@ -58,7 +56,7 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         var workout = await _context.Workouts
             .Where(w => w.Id == id)
             .AsNoTracking()
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
 
         if (workout is null)
         {
@@ -206,14 +204,14 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
 
     }
  
-    private static Expression<Func<Workout, WorkoutListItemDto>> ProjectToWorkoutDto()
+    private static Expression<Func<Workout, WorkoutListItemDto>> ProjectToWorkoutListItemDto()
     {
         return w => new WorkoutListItemDto()
         {
             Id = w.Id,
             Name = w.Name,
             ExerciseCount = w.ExerciseEntries.Count,
-            SetCount = w.ExerciseEntries.Select(e => e.Sets).Count(),
+            SetCount = w.ExerciseEntries.Select(e => e.Sets.Count()).Sum(),
             WorkoutDate = w.WorkoutDate
         };
 
