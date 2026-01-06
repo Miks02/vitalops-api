@@ -7,7 +7,7 @@ public class WorkoutSummaryDto
 {
     public int ExerciseCount { get; set; }
 
-    public DateTime LastWorkoutDate { get; set; }
+    public DateTime? LastWorkoutDate { get; set; }
 
     public ExerciseType FavoriteExerciseType { get; set; }
 }

@@ -1,5 +1,6 @@
-using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Linq.Expressions;
 using WorkoutTrackerApi.Data;
 using WorkoutTrackerApi.DTO.ExerciseEntry;
 using WorkoutTrackerApi.DTO.Global;
@@ -181,12 +182,11 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
 
     private async Task<WorkoutSummaryDto> BuildWorkoutSummary() 
     {
-        var lastWorkoutDate = await _context.Workouts
-            .MaxAsync(w => w.WorkoutDate);
-
+        DateTime? lastWorkoutDate = await _context.Workouts
+            .MaxAsync(w => (DateTime?)w.WorkoutDate);
 
         var exerciseCount = await _context.Workouts
-            .Select(w => w.ExerciseEntries)
+            .SelectMany(w => w.ExerciseEntries)
             .CountAsync();
 
         var favoriteExerciseType = await _context.Workouts
