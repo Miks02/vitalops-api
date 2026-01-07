@@ -21,7 +21,7 @@ namespace WorkoutTrackerApi.Controllers
         }
 
 
-        [HttpGet("all")]
+        [HttpGet]
         public async Task<IActionResult> GetMyWorkouts([FromQuery] string sortBy = "newest", [FromQuery] string search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -33,6 +33,17 @@ namespace WorkoutTrackerApi.Controllers
             }
             
             var getWorkoutsResult = await _workoutService.GetUserWorkoutsPagedAsync(queryParams, userId);
+
+            return getWorkoutsResult.ToActionResult();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetMyWorkoutsByQueryParams([FromQuery] string sortBy = "newest", [FromQuery] string search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            var queryParams = new QueryParams(page, pageSize, search, sortBy);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var getWorkoutsResult = await _workoutService.GetUserWorkoutsByQueryParams(queryParams, userId!);
 
             return getWorkoutsResult.ToActionResult();
         }

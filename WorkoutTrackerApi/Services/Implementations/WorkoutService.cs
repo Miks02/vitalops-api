@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore.Design;
 using WorkoutTrackerApi.Data;
 using WorkoutTrackerApi.DTO.ExerciseEntry;
 using WorkoutTrackerApi.DTO.Global;
@@ -48,7 +49,22 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
 
 
         return ServiceResult<WorkoutPageDto>.Success(workoutPage);
+    }
 
+    public async Task<ServiceResult<PagedResult<WorkoutListItemDto>>> GetUserWorkoutsByQueryParams(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(userId))
+            throw new InvalidOperationException("CRITICAL ERROR: user id is null or empty");
+
+        var paginatedWorkouts = await QueryBuilder(queryParams, userId)
+            .Skip((queryParams.Page - 1) * queryParams.PageSize)
+            .Take(queryParams.PageSize)
+            .Select(ProjectToWorkoutListItemDto())
+            .ToListAsync(cancellationToken);
+
+        var pagedResult = new PagedResult<WorkoutListItemDto>(paginatedWorkouts, queryParams.Page, queryParams.PageSize, 0);
+
+        return ServiceResult<PagedResult<WorkoutListItemDto>>.Success(pagedResult);
     }
 
     public async Task<ServiceResult<WorkoutDetailsDto>> GetWorkoutByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -145,7 +161,7 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         return ServiceResult.Success();
     }
     
-    private IQueryable<Workout> QueryBuilder(QueryParams queryParams, string userId)
+    private IQueryable<Workout> QueryBuilder(QueryParams queryParams, string? userId = "")
     {
         var query = _context.Workouts
             .OrderByDescending(w => w.WorkoutDate)
