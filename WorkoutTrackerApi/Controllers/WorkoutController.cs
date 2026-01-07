@@ -21,11 +21,16 @@ namespace WorkoutTrackerApi.Controllers
         }
 
 
-        [HttpGet]
-        public async Task<IActionResult> GetMyWorkouts([FromQuery] string sortBy = "newest", [FromQuery] string search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        [HttpGet("overview")]
+        public async Task<IActionResult> GetMyWorkoutsPage(
+            [FromQuery] string sortBy = "newest", 
+            [FromQuery] string searchBy = "", 
+            [FromQuery] DateTime? date = null, 
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10)
         {
             string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var queryParams = new QueryParams(page, pageSize, search, sortBy);
+            var queryParams = new QueryParams(page, pageSize, searchBy, sortBy, date);
 
             if (string.IsNullOrEmpty(userId))
             {
@@ -38,9 +43,14 @@ namespace WorkoutTrackerApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMyWorkoutsByQueryParams([FromQuery] string sortBy = "newest", [FromQuery] string search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetMyWorkoutsByQueryParams(
+            [FromQuery] string sortBy = "newest", 
+            [FromQuery] string searchBy = "", 
+            [FromQuery] DateTime? date = null, 
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10)
         {
-            var queryParams = new QueryParams(page, pageSize, search, sortBy);
+            var queryParams = new QueryParams(page, pageSize, searchBy, sortBy, date);
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var getWorkoutsResult = await _workoutService.GetUserWorkoutsByQueryParams(queryParams, userId!);

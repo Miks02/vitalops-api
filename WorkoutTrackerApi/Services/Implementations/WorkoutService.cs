@@ -190,6 +190,11 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
             query = query.Where(w => EF.Functions.Like(w.Name, searchPattern));
         }
 
+        if (queryParams.Date is not null)
+        {
+            query = query.Where(w => w.WorkoutDate == queryParams.Date);
+        }
+
         return query;
 
     }
