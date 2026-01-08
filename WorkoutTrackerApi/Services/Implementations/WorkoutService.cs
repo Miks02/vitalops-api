@@ -9,13 +9,14 @@ using WorkoutTrackerApi.DTO.Workout;
 using WorkoutTrackerApi.Models;
 using WorkoutTrackerApi.Services.Interfaces;
 using WorkoutTrackerApi.Services.Results;
+using WorkoutTrackerApi.Extensions;
 
 namespace WorkoutTrackerApi.Services.Implementations;
 
 public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
 {
     private readonly AppDbContext _context;
-    private readonly int _pageSize = 12;
+    private readonly int _pageSize = 8;
 
     public WorkoutService
         (   
@@ -104,7 +105,7 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
                 ExerciseType = e.ExerciseType,
                 CardioType = e.CardioType,
                 DistanceKm = e.DistanceKm,
-                Duration = e.Duration,
+                Duration = ValidateMinutesAndSeconds(e.DurationMinutes, e.DurationSeconds),
                 AvgHeartRate = e.AvgHeartRate,
                 MaxHeartRate = e.MaxHeartRate,
                 CaloriesBurned = e.CaloriesBurned,
@@ -130,12 +131,12 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
             LogCritical("CRITICAL: Error happened while trying to add workout to the database", ex);
             return ServiceResult<WorkoutDetailsDto>.Failure(Error.Database.SaveChangesFailed());
         }
-        
 
-        LogInformation("Workout has been added successfully");
+
+        LogInformation("Workout has been added successfully: " + newWorkout);
 
         var workoutDto = MapToWorkoutDetailsDto().Invoke(newWorkout);
-        
+
         return ServiceResult<WorkoutDetailsDto>.Success(workoutDto);
     }
 
@@ -324,7 +325,8 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
                 AvgHeartRate = e.AvgHeartRate,
                 CaloriesBurned = e.CaloriesBurned,
                 DistanceKm = e.DistanceKm,
-                Duration = e.Duration,
+                DurationMinutes = e.Duration.ToIntegerFromNullableMinutes(),
+                DurationSeconds = e.Duration.ToIntegerFromNullableSeconds(),
                 Sets = e.Sets.Select(s => new SetEntryDto()
                 {
                     Id = s.Id,
@@ -333,6 +335,17 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
                 }).ToList()
             }).ToList()
         };
+    }
+
+    private TimeSpan? ValidateMinutesAndSeconds(int? minutes, int? seconds)
+    {
+        if (minutes is null || seconds is null)
+            return null;
+
+        TimeSpan fromMinutes = TimeSpan.FromMinutes((double)minutes);
+        TimeSpan fromSeconds = TimeSpan.FromSeconds((double)seconds);
+
+        return fromMinutes + fromSeconds;
     }
     
 }
