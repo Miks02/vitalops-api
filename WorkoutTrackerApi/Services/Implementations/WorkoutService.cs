@@ -49,6 +49,8 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
             WorkoutSummary = workoutSummary
         };
 
+
+
         return ServiceResult<WorkoutPageDto>.Success(workoutPage);
     }
 
@@ -67,7 +69,6 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         var totalWorkouts = await CountWorkouts(queryParams, userId);
 
         var pagedResult = new PagedResult<WorkoutListItemDto>(paginatedWorkouts, queryParams.Page, _pageSize, totalPaginatedWorkouts, totalWorkouts);
-
 
         return ServiceResult<PagedResult<WorkoutListItemDto>>.Success(pagedResult);
     }
@@ -187,10 +188,6 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
             }
         }
 
-        query = query
-            .Skip((queryParams.Page - 1) * _pageSize)
-            .Take(_pageSize);
-
         if (!string.IsNullOrWhiteSpace(queryParams.Search))
         {
             string searchPattern = $"%{queryParams.Search}%";
@@ -201,6 +198,10 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         {
             query = query.Where(w => w.WorkoutDate == queryParams.Date);
         }
+
+        query = query
+            .Skip((queryParams.Page - 1) * _pageSize)
+            .Take(_pageSize);
 
         return query.Select(ProjectToWorkoutListItemDto());
 
@@ -224,9 +225,6 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
             string searchPattern = $"%{queryParams.Search}%";
             query = query.Where(w => EF.Functions.Like(w.Name, searchPattern));
         }
-
-        if (!string.IsNullOrWhiteSpace(userId))
-            query = query.Where(w => w.UserId == userId);
 
         if (!string.IsNullOrWhiteSpace(queryParams.Sort))
         {
