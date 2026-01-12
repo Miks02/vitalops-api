@@ -52,6 +52,23 @@ public sealed class Error
             return new Error("Resource.AlreadyExists", message);
         }
     }
+
+    public static class Validation
+    {
+        public static Error InvalidInput(string message = "The provided input is invalid")
+            => new("Validation.InvalidInput", message);
+        
+        public static Error MissingRequiredField(string fieldName)
+            => new("Validation.MissingRequiredField", $"The required field '{fieldName}' is missing");
+        
+        public static Error OutOfRange(string paramName, string message = "")
+        {
+            string fullMessage = string.IsNullOrWhiteSpace(message)
+                ? $"The value for '{paramName}' is out of the allowed range"
+                : message;
+            return new Error("Validation.OutOfRange", fullMessage);
+        }
+    }
     
     public static class Auth
     {
