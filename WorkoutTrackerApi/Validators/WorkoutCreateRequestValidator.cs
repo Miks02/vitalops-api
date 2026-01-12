@@ -11,6 +11,10 @@ public class WorkoutCreateRequestValidator : AbstractValidator<WorkoutCreateRequ
             .NotEmpty().WithMessage("Workout name is required")
             .MaximumLength(200).WithMessage("Name is too long (200 characters max)");
 
+        RuleFor(p => p.WorkoutDate)
+            .NotEmpty().WithMessage("Workout date is required")
+            .LessThanOrEqualTo(DateTime.UtcNow).WithMessage("Workout date cannot be in the future");
+
         RuleFor(p => p.Notes)
             .MaximumLength(500).WithMessage("Notes are too long (500 characters max)")
             .When(p => !string.IsNullOrEmpty(p.Notes));

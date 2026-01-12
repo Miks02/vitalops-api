@@ -54,7 +54,7 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         return ServiceResult<WorkoutPageDto>.Success(workoutPage);
     }
 
-    public async Task<ServiceResult<PagedResult<WorkoutListItemDto>>> GetUserWorkoutsByQueryParams(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<PagedResult<WorkoutListItemDto>>> GetUserWorkoutsByQueryParamsAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(userId))
             throw new InvalidOperationException("CRITICAL ERROR: user id is null or empty");
@@ -63,7 +63,6 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
 
         var paginatedWorkouts = await query.ToListAsync(cancellationToken);
 
-
         var totalPaginatedWorkouts = await query.CountAsync();
 
         var totalWorkouts = await CountWorkouts(queryParams, userId);
@@ -71,6 +70,27 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         var pagedResult = new PagedResult<WorkoutListItemDto>(paginatedWorkouts, queryParams.Page, _pageSize, totalPaginatedWorkouts, totalWorkouts);
 
         return ServiceResult<PagedResult<WorkoutListItemDto>>.Success(pagedResult);
+    }
+
+    public async Task<IReadOnlyList<WorkoutListItemDto>> GetRecentWorkoutsAsync(string userId, int itemsToTake, CancellationToken cancellationToken = default)
+    {
+       
+        if (itemsToTake <= 0)
+        {
+            LogError("Items to take must be greater than zero");
+            throw new ArgumentOutOfRangeException(nameof(itemsToTake), "Items to take must be greater than zero");
+        }
+
+        var recentWorkouts = await _context.Workouts
+            .AsNoTracking()
+            .Where(w => w.UserId == userId)
+            .OrderByDescending(w => w.WorkoutDate)
+            .Take(itemsToTake)
+            .Select(ProjectToWorkoutListItemDto())
+            .ToListAsync(cancellationToken);
+
+        return recentWorkouts;
+
     }
 
     public async Task<ServiceResult<WorkoutDetailsDto>> GetWorkoutByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -89,9 +109,41 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         var workoutDto = MapToWorkoutDetailsDto().Invoke(workout);
 
         return ServiceResult<WorkoutDetailsDto>.Success(workoutDto);
+    }
+
+    public async Task<int?> CalculateWorkoutStreakAsync(string userId, CancellationToken cancellationToken = default)
+    {
+
+        var workoutDates = await _context.Workouts
+            .AsNoTracking()
+            .OrderByDescending(w => w.WorkoutDate)
+            .Where(w => w.UserId == userId)
+            .Select(w => w.WorkoutDate)
+            .ToListAsync(cancellationToken);
+
+        if (!workoutDates.Any())
+            return null;
+
+        int streak = 0;
+
+        DateTime currentDate = DateTime.UtcNow;
+
+        foreach (var date in workoutDates)
+        {
+            if (date.Day == currentDate.Day)
+            {
+                streak++;
+                currentDate = currentDate.AddDays(-1);
+            }
+            else
+                break;
+
+        }
+
+        return streak;
 
     }
-    
+
     public async Task<ServiceResult<WorkoutDetailsDto>> AddWorkoutAsync(WorkoutCreateRequest request, CancellationToken cancellationToken = default)
     {
 
