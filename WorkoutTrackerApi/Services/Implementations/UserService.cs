@@ -64,4 +64,29 @@ public class UserService : IUserService
 
         return await DeleteUserAsync(user);
     }
+
+    public async Task<UserDetailsDto> GetUserDetailsAsync(string id, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.Users
+            .AsNoTracking()
+            .Where(u => u.Id == id)
+            .Select(u => new UserDetailsDto
+            {
+                FullName = u.FirstName + ' ' + u.LastName,
+                UserName = u.UserName!,
+                Email = u.Email!,
+                ImagePath = u.ImagePath,
+                Weight = u.WeightKg,
+                Height = u.HeightCm,
+                DateOfBirth = u.DateOfBirth,
+                RegisteredAt = u.CreatedAt,
+                AccountStatus = u.AccountStatus,
+                Gender = u.Gender
+            }).FirstOrDefaultAsync(cancellationToken);
+
+        if(user is null)
+            throw new InvalidOperationException("User not found");
+
+        return user;
+    }
 }

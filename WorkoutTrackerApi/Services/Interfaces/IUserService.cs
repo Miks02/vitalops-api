@@ -14,6 +14,8 @@ public interface IUserService
     
     Task<User?> GetUserByRefreshTokenAsync(string refreshToken);
 
+    Task<UserDetailsDto> GetUserDetailsAsync(string id, CancellationToken cancellationToken = default);
+
     Task<IList<string>> GetUserRolesAsync(User user);
 
     Task<ServiceResult> DeleteUserAsync(User user);
