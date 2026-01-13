@@ -13,8 +13,9 @@ using WorkoutTrackerApi.Services.Results;
 
 namespace WorkoutTrackerApi.Services.Implementations;
 
-public class AuthService : BaseService<AuthService>, IAuthService
+public class AuthService : IAuthService
 {
+    private readonly ILogger<AuthService> _logger;
     private readonly UserManager<User> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IConfiguration _configuration;
@@ -25,8 +26,9 @@ public class AuthService : BaseService<AuthService>, IAuthService
             UserManager<User> userManager,
             RoleManager<IdentityRole> roleManager,
             IConfiguration configuration
-            ) : base(logger)
+            )
     {
+        _logger = logger;
         _userManager = userManager;
         _roleManager = roleManager;
         _configuration = configuration;
@@ -50,11 +52,11 @@ public class AuthService : BaseService<AuthService>, IAuthService
 
             if (!createResult.Succeeded)
             {
-                LogError("Error happened while trying to create a user");
+                _logger.LogError("Error happened while trying to create a user");
 
                 foreach (var error in createResult.Errors)
                 {
-                    LogError("ERROR: " + error.Description);
+                    _logger.LogError("ERROR: " + error.Description);
                     if (error.Code == "DuplicateEmail")
                         return ServiceResult<AuthResponseDto>.Failure(Error.User.EmailAlreadyExists());
                     if (error.Code == "DuplicateUserName")
@@ -71,7 +73,7 @@ public class AuthService : BaseService<AuthService>, IAuthService
 
             if (!generateTokens.IsSucceeded)
             {
-                LogError("Failed to generate tokens for a newly registered user " + user.Id);
+                _logger.LogError("Failed to generate tokens for a newly registered user " + user.Id);
                 return ServiceResult<AuthResponseDto>.Failure(generateTokens.Errors.ToArray());
             }
             
@@ -94,7 +96,7 @@ public class AuthService : BaseService<AuthService>, IAuthService
         }
         catch (Exception ex)
         {
-            LogError("Error happened while trying to create new user ", ex);
+            _logger.LogError("Error happened while trying to create new user " + ex.Message);
         }
 
         return ServiceResult<AuthResponseDto>.Failure(Error.Database.OperationFailed());
@@ -106,13 +108,13 @@ public class AuthService : BaseService<AuthService>, IAuthService
 
         if (user is null)
         {
-            LogError($"Failed sign in for user with email: {request.Email}. User not found");
+            _logger.LogError($"Failed sign in for user with email: {request.Email}. User not found");
             return ServiceResult<AuthResponseDto>.Failure(Error.Auth.LoginFailed("Incorrect email or password"));
         }
 
         if (!await _userManager.CheckPasswordAsync(user, request.Password))
         {
-            LogError($"Failed sign in for user with email: {request.Email}. Incorrect password");
+            _logger.LogError($"Failed sign in for user with email: {request.Email}. Incorrect password");
             return ServiceResult<AuthResponseDto>.Failure(Error.Auth.LoginFailed("Incorrect email or password"));
         }
 
@@ -121,7 +123,7 @@ public class AuthService : BaseService<AuthService>, IAuthService
         if(!newAccessToken.IsSucceeded)
             return ServiceResult<AuthResponseDto>.Failure(newAccessToken.Errors.ToArray());
 
-        LogInformation($"Sign in successful for user {user.Email}");
+        _logger.LogInformation($"Sign in successful for user {user.Email}");
 
         var userDto = new UserDto()
         {
@@ -153,7 +155,7 @@ public class AuthService : BaseService<AuthService>, IAuthService
 
         if (user is null)
         {
-            LogError($"User with refresh token {refreshToken} has not been found");
+            _logger.LogError($"User with refresh token {refreshToken} has not been found");
             return ServiceResult.Failure(Error.User.NotFound());
         }
 
@@ -167,11 +169,15 @@ public class AuthService : BaseService<AuthService>, IAuthService
 
             var errors = removeTokenResult.Errors.Select(e => new Error(e.Code, e.Description)).ToList();
   
-            LogResultErrors($"Failed to sign out | UserID: {user.Id} ", errors.ToArray());
+            _logger.LogError($"Failed to sign out | UserID: {user.Id} ");
+            foreach (var error in errors)
+            {
+                _logger.LogError("Code: {code} Description: {description}", error.Code, error.Description);
+            }
             return ServiceResult.Failure(errors.ToArray());
         }
 
-        LogInformation($"{user.UserName} signed out successfully!");
+        _logger.LogInformation($"{user.UserName} signed out successfully!");
         return ServiceResult.Success();
 
     }
@@ -227,7 +233,7 @@ public class AuthService : BaseService<AuthService>, IAuthService
 
         if (!result.Succeeded)
         {
-            LogError("Error happened while assigning refresh token to the user");
+            _logger.LogError("Error happened while assigning refresh token to the user");
             return ServiceResult<string>.Failure(Error.Auth.JwtError());
         }
 
@@ -240,18 +246,18 @@ public class AuthService : BaseService<AuthService>, IAuthService
             .Where(u => u.RefreshToken == refreshToken)
             .FirstOrDefaultAsync();
         
-        LogInformation("Refresh token value: " + refreshToken);
+        _logger.LogInformation("Refresh token value: " + refreshToken);
 
         if (user is null || user.RefreshToken is null)
         {
-            LogError($"Failed to regenerate access and refresh tokens. User or refresh token is null");
+            _logger.LogError($"Failed to regenerate access and refresh tokens. User or refresh token is null");
             return ServiceResult<AuthResponseDto>.Failure(Error.Auth.JwtError("Failed to regenerate auth tokens"));
         }
 
         if (user.TokenExpDate < DateTime.UtcNow)
         {
             var error = Error.Auth.ExpiredToken();
-            LogError("Failed to regenerate auth tokens. " + error.Description);
+            _logger.LogError("Failed to regenerate auth tokens. " + error.Description);
             return ServiceResult<AuthResponseDto>.Failure(error);
         }
 
@@ -260,7 +266,10 @@ public class AuthService : BaseService<AuthService>, IAuthService
 
         if (!newRefreshToken.IsSucceeded)
         {
-            LogResultErrors(newRefreshToken.Errors.ToArray());
+            foreach (var error in newRefreshToken.Errors)
+            {
+                _logger.LogError("Code: {code} Description: {description}", error.Code, error.Description);
+            }
             return ServiceResult<AuthResponseDto>.Failure(newRefreshToken.Errors.ToArray());
         }
 
@@ -289,7 +298,7 @@ public class AuthService : BaseService<AuthService>, IAuthService
             RefreshToken = assignRefreshToken.Payload!
         };
 
-        LogInformation("Auth tokens generated successfully");
+        _logger.LogInformation("Auth tokens generated successfully");
         return ServiceResult<TokenResponseDto>.Success(tokenResponse);
 
     }
@@ -305,7 +314,11 @@ public class AuthService : BaseService<AuthService>, IAuthService
             {
                 var identityErrors = createRoleResult.Errors.Select(e => new Error(e.Code, e.Description));
 
-                LogResultErrors("Unexpected error happened while creating a new role for the user", identityErrors.ToArray());
+                _logger.LogError("Unexpected error happened while creating a new role for the user");
+                foreach (var error in identityErrors)
+                {
+                    _logger.LogError("Code: {code} Description: {description}", error.Code, error.Description);
+                }
 
                 return ServiceResult.Failure(Error.General.UnknownError("Unexpected error happened while creating a new role"));
             }
@@ -316,11 +329,15 @@ public class AuthService : BaseService<AuthService>, IAuthService
         {
             var identityErrors = addToRoleResult.Errors.Select(e => new Error(e.Code, e.Description));
 
-            LogResultErrors("Unexpected error happened while assigning role to the user", identityErrors.ToArray());
+            _logger.LogError("Unexpected error happened while assigning role to the user");
+            foreach (var error in identityErrors)
+            {
+                _logger.LogError("Code: {code} Description: {description}", error.Code, error.Description);
+            }
 
             return ServiceResult.Failure(Error.General.UnknownError("Unexpected error happened while assigning role to the user"));
         }
-        LogInformation("User assigned to role successfully");
+        _logger.LogInformation("User assigned to role successfully");
         return ServiceResult.Success();
 
     }

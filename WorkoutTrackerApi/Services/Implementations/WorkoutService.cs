@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore.Design;
 using WorkoutTrackerApi.Data;
 using WorkoutTrackerApi.DTO.ExerciseEntry;
 using WorkoutTrackerApi.DTO.Global;
@@ -14,17 +13,18 @@ using WorkoutTrackerApi.Enums;
 
 namespace WorkoutTrackerApi.Services.Implementations;
 
-public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
+public class WorkoutService : IWorkoutService
 {
+    private readonly ILogger<WorkoutService> _logger;
     private readonly AppDbContext _context;
     private readonly int _pageSize = 8;
 
     public WorkoutService
         (   
             ILogger<WorkoutService> logger,
-            AppDbContext context) : base(logger
-        )
+            AppDbContext context)
     {
+        _logger = logger;
         _context = context;
     }
 
@@ -63,7 +63,7 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
 
         var paginatedWorkouts = await query.ToListAsync(cancellationToken);
 
-        var totalPaginatedWorkouts = await query.CountAsync();
+        var totalPaginatedWorkouts = await query.CountAsync(cancellationToken);
 
         var totalWorkouts = await CountWorkouts(queryParams, userId);
 
@@ -77,7 +77,7 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
        
         if (itemsToTake <= 0)
         {
-            LogError("Items to take must be greater than zero");
+            _logger.LogError("Items to take must be greater than zero");
             throw new ArgumentOutOfRangeException(nameof(itemsToTake), "Items to take must be greater than zero");
         }
 
@@ -102,7 +102,7 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
 
         if (workout is null)
         {
-            LogInformation($"Workout with id {id} not found");
+            _logger.LogInformation($"Workout with id {id} not found");
             return ServiceResult<WorkoutDetailsDto>.Failure(Error.Resource.NotFound("Workout"));
         }
 
@@ -182,12 +182,12 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
         }
         catch (DbUpdateException ex)
         {
-            LogCritical("CRITICAL: Error happened while trying to add workout to the database", ex);
+            _logger.LogError("CRITICAL: Error happened while trying to add workout to the database" + ex.Message);
             return ServiceResult<WorkoutDetailsDto>.Failure(Error.Database.SaveChangesFailed());
         }
 
 
-        LogInformation("Workout has been added successfully: " + newWorkout);
+        _logger.LogInformation("Workout has been added successfully: " + newWorkout);
 
         var workoutDto = MapToWorkoutDetailsDto().Invoke(newWorkout);
 
@@ -205,17 +205,17 @@ public class WorkoutService : BaseService<WorkoutService> , IWorkoutService
 
             if (deleted == 0)
             {
-                LogInformation("Delete failed, workout not found");
+                _logger.LogInformation("Delete failed, workout not found");
                 return ServiceResult.Failure(Error.Resource.NotFound("Workout"));
             }
         }
         catch (DbUpdateException ex)
         {
-            LogCritical("CRITICAL: Error happened deleting workout from the database", ex);
+            _logger.LogError("CRITICAL: Error happened deleting workout from the database" + ex.Message);
             return ServiceResult<WorkoutDetailsDto>.Failure(Error.Database.SaveChangesFailed());
         }
         
-        LogInformation("Workout deleted successfully");
+        _logger.LogInformation("Workout deleted successfully");
         return ServiceResult.Success();
     }
     
