@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Identity;
+
 namespace WorkoutTrackerApi.Services.Results;
 
 public class ServiceResult
@@ -20,6 +22,17 @@ public class ServiceResult
             throw new ArgumentException("At least one error must be provided within a failure");
 
         return new ServiceResult(false, errors.AsReadOnly());
+
+    }
+
+    public static ServiceResult Failure(params IdentityError[] errors)
+    {
+        if (errors.Length == 0)
+            throw new ArgumentException("At least one error must be provided within a failure");
+
+        var castedIdentityErrors = errors.Select(e => new Error(e.Code, e.Description)).ToArray();
+
+        return new ServiceResult(false, castedIdentityErrors.AsReadOnly());
 
     }
 
@@ -55,6 +68,17 @@ public class ServiceResult<T> : ServiceResult
             throw new ArgumentException("At least one error must be provided within a failure");
 
         return new ServiceResult<T>(false, errors.AsReadOnly());
+    }
+
+    public new static ServiceResult<T> Failure(params IdentityError[] errors)
+    {
+        if (errors.Length == 0)
+            throw new ArgumentException("At least one error must be provided within a failure");
+
+        var castedIdentityErrors = errors.Select(e => new Error(e.Code, e.Description)).ToArray();
+
+        return new ServiceResult<T>(false, castedIdentityErrors.AsReadOnly());
+
     }
 
 }
