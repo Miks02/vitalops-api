@@ -45,7 +45,7 @@ namespace WorkoutTrackerApi.Controllers
 
             DeleteRefreshTokenCookie();
 
-            return result.ToActionResult();
+            return result.ToIActionResult();
         }
 
         [Authorize]

@@ -6,7 +6,7 @@ namespace WorkoutTrackerApi.Extensions;
 
 public static class ServiceResultExtensions
 {
-    public static IActionResult ToActionResult(this ServiceResult result, string successMessage = "Success")
+    public static IActionResult ToIActionResult(this ServiceResult result, string successMessage = "Success")
     {
         if (result.IsSucceeded)
         {
@@ -16,7 +16,7 @@ public static class ServiceResultExtensions
         return new ObjectResult(ApiResponse.Failure(result.Errors.First()));
     }
     
-    public static IActionResult ToActionResult<T>(this ServiceResult<T> result, string successMessage = "Success")
+    public static IActionResult ToIActionResult<T>(this ServiceResult<T> result, string successMessage = "Success")
     {
         if (result.IsSucceeded)
         {
@@ -26,4 +26,6 @@ public static class ServiceResultExtensions
 
         return new ObjectResult(ApiResponse.Failure(result.Errors.First()));
     }
+
+    
 }

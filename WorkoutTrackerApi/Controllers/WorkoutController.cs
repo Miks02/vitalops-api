@@ -38,7 +38,7 @@ namespace WorkoutTrackerApi.Controllers
             
             var getWorkoutsResult = await _workoutService.GetUserWorkoutsPagedAsync(queryParams, userId);
 
-            return getWorkoutsResult.ToActionResult();
+            return getWorkoutsResult.ToIActionResult();
         }
 
         [HttpGet]
@@ -53,7 +53,7 @@ namespace WorkoutTrackerApi.Controllers
 
             var getWorkoutsResult = await _workoutService.GetUserWorkoutsByQueryParamsAsync(queryParams, userId!);
 
-            return getWorkoutsResult.ToActionResult();
+            return getWorkoutsResult.ToIActionResult();
         }
 
         [HttpGet("workout/{id:int}")]
@@ -61,7 +61,7 @@ namespace WorkoutTrackerApi.Controllers
         {
             var workouts = await _workoutService.GetWorkoutByIdAsync(id);
             
-            return workouts.ToActionResult();
+            return workouts.ToIActionResult();
         }
 
         [HttpDelete("delete/{id:int}")]
@@ -71,7 +71,7 @@ namespace WorkoutTrackerApi.Controllers
 
 
 
-            return workoutDeleteResult.ToActionResult();
+            return workoutDeleteResult.ToIActionResult();
 
         }
 
@@ -84,7 +84,7 @@ namespace WorkoutTrackerApi.Controllers
             var addResult = await _workoutService.AddWorkoutAsync(request);
 
 
-            return addResult.ToActionResult();
+            return addResult.ToIActionResult();
         }
         
     }
