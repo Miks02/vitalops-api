@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using WorkoutTrackerApi.DTO.User;
+using WorkoutTrackerApi.Enums;
 using WorkoutTrackerApi.Models;
 using WorkoutTrackerApi.Services.Interfaces;
 using WorkoutTrackerApi.Services.Results;
@@ -10,10 +12,12 @@ namespace WorkoutTrackerApi.Services.Implementations;
 public class UserService : IUserService
 {
     private readonly UserManager<User> _userManager;
+    private readonly ILogger<UserService> _logger;
 
-    public UserService(UserManager<User> userManager)
+    public UserService(UserManager<User> userManager, ILogger<UserService> logger)
     {
         _userManager = userManager;
+        _logger = logger;
     }
     
     public async Task<User?> GetUserByIdAsync(string id)
@@ -86,6 +90,186 @@ public class UserService : IUserService
 
         if(user is null)
             throw new InvalidOperationException("User not found");
+
+        return user;
+    }
+
+    public async Task<ServiceResult<DateTime>> UpdateDateOfBirthAsync(UpdateDateOfBirthDto dto, string userId, CancellationToken cancellationToken = default)
+    {
+        var user = await GetUserForUpdateAsync(userId);
+
+        user.DateOfBirth = dto.DateOfBirth;
+
+        var updateResult = await _userManager.UpdateAsync(user);
+
+        if(!updateResult.Succeeded)
+        {
+            foreach (var error in updateResult.Errors)
+            {
+                _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
+            }
+            return ServiceResult<DateTime>.Failure(updateResult.Errors.ToArray());
+        }
+
+        return ServiceResult<DateTime>.Success(dto.DateOfBirth);
+    }
+
+    public async Task<ServiceResult<double>> UpdateWeightAsync(UpdateWeightDto dto, string userId, CancellationToken cancellationToken = default)
+    {
+        var user = await GetUserForUpdateAsync(userId);
+
+        user.WeightKg = dto.Weight;
+
+        var updateResult = await _userManager.UpdateAsync(user);
+
+        if(!updateResult.Succeeded)
+        {
+            foreach (var error in updateResult.Errors)
+            {
+                _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
+            }
+            return ServiceResult<double>.Failure(updateResult.Errors.ToArray());
+        }
+
+        return ServiceResult<double>.Success(dto.Weight);
+    }
+
+    public async Task<ServiceResult<double>> UpdateHeightAsync(UpdateHeightDto dto, string userId, CancellationToken cancellationToken = default)
+    {
+        var user = await GetUserForUpdateAsync(userId);
+
+        user.HeightCm = dto.Height;
+
+        var updateResult = await _userManager.UpdateAsync(user);
+
+        if (!updateResult.Succeeded)
+        {
+            foreach (var error in updateResult.Errors)
+            {
+                _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
+            }
+            return ServiceResult<double>.Failure(updateResult.Errors.ToArray());
+        }
+
+        return ServiceResult<double>.Success(dto.Height);
+    }
+
+    public async Task<ServiceResult<Gender>> UpdateGenderAsync(UpdateGenderDto dto, string userId, CancellationToken cancellationToken = default)
+    {
+        var user = await GetUserForUpdateAsync(userId);
+
+        user.Gender = dto.Gender;
+
+        var updateResult = await _userManager.UpdateAsync(user);
+
+        if (!updateResult.Succeeded)
+        {
+            foreach (var error in updateResult.Errors)
+            {
+                _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
+            }
+            return ServiceResult<Gender>.Failure(updateResult.Errors.ToArray());
+        }
+
+           return ServiceResult<Gender>.Success(dto.Gender);
+    }
+
+    public async Task<ServiceResult<UpdateFullNameDto>> UpdateFullNameAsync(UpdateFullNameDto dto, string userId, CancellationToken cancellationToken = default)
+    {
+        var user = await GetUserForUpdateAsync(userId);
+
+        user.FirstName = dto.FirstName;
+        user.LastName = dto.LastName;
+
+        var updateResult = await _userManager.UpdateAsync(user);
+
+        if (!updateResult.Succeeded)
+        {
+            foreach (var error in updateResult.Errors)
+            {
+                _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
+            }
+            return ServiceResult<UpdateFullNameDto>.Failure(updateResult.Errors.ToArray());
+        }
+
+        return ServiceResult<UpdateFullNameDto>.Success(dto);
+    }
+
+    public async Task<ServiceResult<string>> UpdateEmailAsync(UpdateEmailDto dto, string userId, CancellationToken cancellationToken = default)
+    {
+        var user = await GetUserForUpdateAsync(userId);
+
+        user.Email = dto.Email;
+
+        var updateResult = await _userManager.UpdateAsync(user);
+
+        if(!updateResult.Succeeded)
+        {
+            var identityErrors = updateResult.Errors.ToArray();
+
+            foreach(var error in identityErrors)
+            {
+                if(error.Code == "DuplicateEmail")
+                {
+                    _logger.LogWarning("VALIDATION ERROR: Email is already taken");
+                    return ServiceResult<string>.Failure(Error.User.EmailAlreadyExists());
+                }
+                if(error.Code == "InvalidEmail")
+                {
+                    _logger.LogWarning("VALIDATION ERROR: Email is invalid");
+                    return ServiceResult<string>.Failure(Error.Validation.InvalidInput());
+                }
+
+                _logger.LogWarning($"Error occurred: \n Code: {error.Code} {error.Description}");
+            }
+            return ServiceResult<string>.Failure(identityErrors);
+        }
+
+        return ServiceResult<string>.Success(dto.Email);
+    }
+
+    public async Task<ServiceResult<string>> UpdateUserNameAsync(UpdateUserNameDto dto, string userId, CancellationToken cancellationToken = default)
+    {
+        var user = await GetUserForUpdateAsync(userId);
+
+        user.UserName = dto.UserName;
+
+        var updateResult = await _userManager.UpdateAsync(user);
+
+        if (!updateResult.Succeeded)
+        {
+            var identityErrors = updateResult.Errors.ToArray();
+
+            foreach (var error in identityErrors)
+            {
+                if (error.Code == "DuplicateUsername")
+                {
+                    _logger.LogWarning("VALIDATION ERROR: Username is already taken");
+                    return ServiceResult<string>.Failure(Error.User.UsernameAlreadyExists());
+                }
+                if (error.Code == "InvalidUsername")
+                {
+                    _logger.LogWarning("VALIDATION ERROR: Username is invalid");
+                    return ServiceResult<string>.Failure(Error.Validation.InvalidInput());
+                }
+
+                _logger.LogWarning($"Error occurred: \n Code: {error.Code} {error.Description}");
+            }
+            return ServiceResult<string>.Failure(identityErrors);
+        }
+
+        return ServiceResult<string>.Success(dto.UserName);
+    }
+
+    private async Task<User> GetUserForUpdateAsync(string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new ArgumentNullException(nameof(userId), "CRITICAL ERROR: UserID is null or empty");
+
+        var user = await _userManager.FindByIdAsync(userId);
+
+        if (user is null)
+            throw new InvalidOperationException("CRITICAL ERROR: User is null");
 
         return user;
     }
