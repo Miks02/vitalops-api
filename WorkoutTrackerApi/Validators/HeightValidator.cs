@@ -8,7 +8,7 @@ namespace WorkoutTrackerApi.Validators
         public HeightValidator()
         {
             RuleFor(x => x.Height)
-               .GreaterThanOrEqualTo(100)
+               .GreaterThanOrEqualTo(70)
                .WithMessage("Height below 70 cm is not supported")
                .LessThanOrEqualTo(250)
                .WithMessage("Height above 250 cm is not supported");

@@ -8,8 +8,8 @@ namespace WorkoutTrackerApi.Validators
         public WeightValidator()
         {
             RuleFor(x => x.Weight)
-                .GreaterThan(0)
-                .WithMessage("Weight must be greater than 0")
+                .GreaterThan(25)
+                .WithMessage("Weight must be greater than 25 KG")
                 .LessThanOrEqualTo(400)
                 .WithMessage("Weight cannot be higher than 400 KG");
         }

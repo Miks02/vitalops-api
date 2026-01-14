@@ -8,6 +8,7 @@ namespace WorkoutTrackerApi.Validators
         public GenderValidator()
         {
             RuleFor(x => x.Gender)
+                .IsInEnum()
                 .NotEmpty()
                 .WithMessage("Gender is required");
         }
