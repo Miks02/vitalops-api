@@ -36,7 +36,7 @@ public class ApiResponseTransformerFilter : IResultFilter
     {
         return errorCode switch
         {
-            var code when code.Contains("AlreadyExists") => 409,
+            var code when code.Contains("AlreadyExists") => 400,
             var code when code.Contains("Validation") => 400,
             var code when code.Contains("Auth") => 401,
             var code when code.Contains("Forbidden") => 403,
