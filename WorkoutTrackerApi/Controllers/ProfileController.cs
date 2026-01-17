@@ -20,13 +20,12 @@ namespace WorkoutTrackerApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<ProfilePageDto>> GetMyProfile()
+        public async Task<ActionResult<ProfilePageDto>> GetMyProfile(CancellationToken cancellationToken = default)
         {
             string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var myProfileDetails = await _profileService.GetUserProfileAsync(userId!);
 
-            return myProfileDetails;
+            return await _profileService.GetUserProfileAsync(userId!, cancellationToken);
         }
     }
 }
