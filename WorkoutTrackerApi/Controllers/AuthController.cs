@@ -22,42 +22,48 @@ namespace WorkoutTrackerApi.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterRequestDto request)
+        public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Register(
+            RegisterRequestDto request,
+            CancellationToken cancellationToken = default
+            )
         {
-            var result = await _authService.RegisterAsync(request);
+            var result = await _authService.RegisterAsync(request, cancellationToken);
 
             return HandleRefreshToken(result);
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginRequestDto request)
+        public async Task<ActionResult<ApiResponse<AuthResponseDto>>> Login(
+            LoginRequestDto request,
+            CancellationToken cancellationToken = default
+            )
         {
-            var result = await _authService.LoginAsync(request);
+            var result = await _authService.LoginAsync(request, cancellationToken);
 
             return HandleRefreshToken(result);
         }
 
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
+        public async Task<ActionResult> Logout()
         {
             
             var result = await _authService.LogoutAsync(GetRefreshToken());
 
             DeleteRefreshTokenCookie();
 
-            return result.ToIActionResult();
+            return result.ToActionResult();
         }
 
         [Authorize]
         [HttpGet("test")]
-        public IActionResult Test()
+        public ActionResult Test()
         {
 
             return Ok(new { message = "You are authenticated", userId = $"{User.FindFirstValue(ClaimTypes.NameIdentifier)}"});
         }
 
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RotateAuthTokens()
+        public async Task<ActionResult<ApiResponse<AuthResponseDto>>> RotateAuthTokens(CancellationToken cancellationToken = default)
         {
             string refreshToken = GetRefreshToken();
 
@@ -66,7 +72,7 @@ namespace WorkoutTrackerApi.Controllers
                 return BadRequest(ApiResponse.Failure(Error.Auth.JwtError()));
             }
 
-            var result = await _authService.RotateAuthTokens(refreshToken);
+            var result = await _authService.RotateAuthTokens(refreshToken, cancellationToken);
 
             return HandleRefreshToken(result);
         }
@@ -75,7 +81,7 @@ namespace WorkoutTrackerApi.Controllers
         {
             if(!result.IsSucceeded)
             {
-                return new ObjectResult(ApiResponse.Failure(result.Errors.First()));
+                return new ObjectResult(ApiResponse.Failure(result.Errors[0]));
             }
 
             var cookieOptions = new CookieOptions()
@@ -133,6 +139,4 @@ namespace WorkoutTrackerApi.Controllers
         }
 
     }
-    
-    
 }
