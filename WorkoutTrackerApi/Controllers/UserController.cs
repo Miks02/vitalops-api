@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Runtime.CompilerServices;
 using System.Security.Claims;
+using WorkoutTrackerApi.DTO.Global;
 using WorkoutTrackerApi.DTO.User;
 using WorkoutTrackerApi.Enums;
 using WorkoutTrackerApi.Extensions;
@@ -21,6 +22,14 @@ namespace WorkoutTrackerApi.Controllers
             _userService = userService;
         }
 
+        [HttpGet("me")]
+        public async Task<ActionResult<ApiResponse<UserDetailsDto>>> GetMe()
+        {
+            var user = await _userService.GetUserDetailsAsync(GetUserId());
+
+            return ApiResponse<UserDetailsDto>.Success("User fetched successfully", user);
+        }
+             
         [HttpPatch("fullname")]
         public async Task<ActionResult<string>> UpdateFullName(
             [FromBody] UpdateFullNameDto fullName,
