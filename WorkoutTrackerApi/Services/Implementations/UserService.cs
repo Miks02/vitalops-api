@@ -19,55 +19,6 @@ public class UserService : IUserService
         _userManager = userManager;
         _logger = logger;
     }
-    
-    public async Task<User?> GetUserByIdAsync(string id)
-    {
-        return await _userManager.FindByIdAsync(id);
-    }
-
-    public async Task<User?> GetUserByUserNameAsync(string username)
-    {
-        return await _userManager.FindByNameAsync(username);
-    }
-
-    public async Task<User?> GetUserByEmailAsync(string email)
-    {
-        return await _userManager.FindByEmailAsync(email);
-    }
-
-    public async Task<User?> GetUserByRefreshTokenAsync(string refreshToken)
-    {
-        return await _userManager.Users.Where(u => u.RefreshToken == refreshToken).FirstOrDefaultAsync();
-    }
-
-    public async Task<IList<string>> GetUserRolesAsync(User user)
-    {
-        return await _userManager.GetRolesAsync(user);
-    }
-
-    public async Task<ServiceResult> DeleteUserAsync(User user)
-    {
-        var result = await _userManager.DeleteAsync(user);
-
-        if (!result.Succeeded)
-        {
-            var identityErrors = result.Errors.Select(e => new Error(e.Code, e.Description));
-            return ServiceResult.Failure(identityErrors.ToArray());
-        }
-        
-        return ServiceResult.Success();
-
-    }
-
-    public async Task<ServiceResult> DeleteUserAsync(string id)
-    {
-        var user = await GetUserByIdAsync(id);
-        
-        if(user is null)
-            return ServiceResult.Failure(Error.User.NotFound());
-
-        return await DeleteUserAsync(user);
-    }
 
     public async Task<UserDetailsDto> GetUserDetailsAsync(string id, CancellationToken cancellationToken = default)
     {
@@ -86,12 +37,38 @@ public class UserService : IUserService
                 RegisteredAt = u.CreatedAt,
                 AccountStatus = u.AccountStatus,
                 Gender = u.Gender
-            }).FirstOrDefaultAsync(cancellationToken);
+            })
+            .FirstOrDefaultAsync(cancellationToken);
 
-        if(user is null)
+        if (user is null)
             throw new InvalidOperationException("User not found");
 
         return user;
+    }
+
+    public async Task<ServiceResult> DeleteUserAsync(User user)
+    {
+        var result = await _userManager.DeleteAsync(user);
+
+        if (!result.Succeeded)
+        {
+            var identityErrors = result.Errors.Select(e => new Error(e.Code, e.Description));
+            return ServiceResult.Failure(identityErrors.ToArray());
+        }
+        
+        return ServiceResult.Success();
+    }
+
+    public async Task<ServiceResult> DeleteUserAsync(string id, CancellationToken cancellationToken = default)
+    {
+        var user = await _userManager.Users
+            .Where(u => u.Id == id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if(user is null)
+            return ServiceResult.Failure(Error.User.NotFound());
+
+        return await DeleteUserAsync(user);
     }
 
     public async Task<ServiceResult<DateTime>> UpdateDateOfBirthAsync(UpdateDateOfBirthDto dto, string userId, CancellationToken cancellationToken = default)
@@ -102,16 +79,14 @@ public class UserService : IUserService
 
         var updateResult = await _userManager.UpdateAsync(user);
 
-        if(!updateResult.Succeeded)
-        {
-            foreach (var error in updateResult.Errors)
-            {
-                _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
-            }
-            return ServiceResult<DateTime>.Failure(updateResult.Errors.ToArray());
-        }
+        if (updateResult.Succeeded)
+            return ServiceResult<DateTime>.Success(dto.DateOfBirth);
 
-        return ServiceResult<DateTime>.Success(dto.DateOfBirth);
+        foreach (var error in updateResult.Errors)
+            _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
+        
+        return ServiceResult<DateTime>.Failure(updateResult.Errors.ToArray());
+
     }
 
     public async Task<ServiceResult<double>> UpdateWeightAsync(UpdateWeightDto dto, string userId, CancellationToken cancellationToken = default)
@@ -122,16 +97,14 @@ public class UserService : IUserService
 
         var updateResult = await _userManager.UpdateAsync(user);
 
-        if(!updateResult.Succeeded)
-        {
-            foreach (var error in updateResult.Errors)
-            {
-                _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
-            }
-            return ServiceResult<double>.Failure(updateResult.Errors.ToArray());
-        }
+        if (updateResult.Succeeded)
+            return ServiceResult<double>.Success(dto.Weight);
 
-        return ServiceResult<double>.Success(dto.Weight);
+        foreach (var error in updateResult.Errors)
+            _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
+        
+        return ServiceResult<double>.Failure(updateResult.Errors.ToArray());
+
     }
 
     public async Task<ServiceResult<double>> UpdateHeightAsync(UpdateHeightDto dto, string userId, CancellationToken cancellationToken = default)
@@ -142,16 +115,14 @@ public class UserService : IUserService
 
         var updateResult = await _userManager.UpdateAsync(user);
 
-        if (!updateResult.Succeeded)
-        {
-            foreach (var error in updateResult.Errors)
-            {
-                _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
-            }
-            return ServiceResult<double>.Failure(updateResult.Errors.ToArray());
-        }
+        if (updateResult.Succeeded)
+            return ServiceResult<double>.Success(dto.Height);
 
-        return ServiceResult<double>.Success(dto.Height);
+        foreach (var error in updateResult.Errors)
+            _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
+        
+        return ServiceResult<double>.Failure(updateResult.Errors.ToArray());
+
     }
 
     public async Task<ServiceResult<Gender>> UpdateGenderAsync(UpdateGenderDto dto, string userId, CancellationToken cancellationToken = default)
@@ -162,16 +133,13 @@ public class UserService : IUserService
 
         var updateResult = await _userManager.UpdateAsync(user);
 
-        if (!updateResult.Succeeded)
-        {
-            foreach (var error in updateResult.Errors)
-            {
-                _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
-            }
-            return ServiceResult<Gender>.Failure(updateResult.Errors.ToArray());
-        }
+        if (updateResult.Succeeded)
+            return ServiceResult<Gender>.Success(dto.Gender);
 
-           return ServiceResult<Gender>.Success(dto.Gender);
+        foreach (var error in updateResult.Errors)
+            _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
+        
+        return ServiceResult<Gender>.Failure(updateResult.Errors.ToArray());
     }
 
     public async Task<ServiceResult<UpdateFullNameDto>> UpdateFullNameAsync(UpdateFullNameDto dto, string userId, CancellationToken cancellationToken = default)
@@ -183,16 +151,14 @@ public class UserService : IUserService
 
         var updateResult = await _userManager.UpdateAsync(user);
 
-        if (!updateResult.Succeeded)
-        {
-            foreach (var error in updateResult.Errors)
-            {
-                _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
-            }
-            return ServiceResult<UpdateFullNameDto>.Failure(updateResult.Errors.ToArray());
-        }
+        if (updateResult.Succeeded)
+            return ServiceResult<UpdateFullNameDto>.Success(dto);
 
-        return ServiceResult<UpdateFullNameDto>.Success(dto);
+        foreach (var error in updateResult.Errors)
+            _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
+        
+        return ServiceResult<UpdateFullNameDto>.Failure(updateResult.Errors.ToArray());
+
     }
 
     public async Task<ServiceResult<string>> UpdateEmailAsync(UpdateEmailDto dto, string userId, CancellationToken cancellationToken = default)
@@ -203,29 +169,28 @@ public class UserService : IUserService
 
         var updateResult = await _userManager.UpdateAsync(user);
 
-        if(!updateResult.Succeeded)
-        {
-            var identityErrors = updateResult.Errors.ToArray();
+        if (updateResult.Succeeded)
+            return ServiceResult<string>.Success(dto.Email);
 
-            foreach(var error in identityErrors)
+        var identityErrors = updateResult.Errors.ToArray();
+
+        foreach(var error in identityErrors)
+        {
+            switch (error.Code)
             {
-                if(error.Code == "DuplicateEmail")
-                {
+                case "DuplicateEmail":
                     _logger.LogWarning("VALIDATION ERROR: Email is already taken");
                     return ServiceResult<string>.Failure(Error.User.EmailAlreadyExists());
-                }
-                if(error.Code == "InvalidEmail")
-                {
+                case "InvalidEmail":
                     _logger.LogWarning("VALIDATION ERROR: Email is invalid");
                     return ServiceResult<string>.Failure(Error.Validation.InvalidInput());
-                }
-
-                _logger.LogWarning($"Error occurred: \n Code: {error.Code} {error.Description}");
+                default:
+                    _logger.LogWarning("Error occurred: \n Code: {code} {description}", error.Code, error.Description);
+                    break;
             }
-            return ServiceResult<string>.Failure(identityErrors);
         }
+        return ServiceResult<string>.Failure(identityErrors);
 
-        return ServiceResult<string>.Success(dto.Email);
     }
 
     public async Task<ServiceResult<string>> UpdateUserNameAsync(UpdateUserNameDto dto, string userId, CancellationToken cancellationToken = default)
@@ -236,29 +201,28 @@ public class UserService : IUserService
 
         var updateResult = await _userManager.UpdateAsync(user);
 
-        if (!updateResult.Succeeded)
-        {
-            var identityErrors = updateResult.Errors.ToArray();
+        if (updateResult.Succeeded)
+            return ServiceResult<string>.Success(dto.UserName);
 
-            foreach (var error in identityErrors)
+        var identityErrors = updateResult.Errors.ToArray();
+
+        foreach (var error in identityErrors)
+        {
+            switch (error.Code)
             {
-                if (error.Code == "DuplicateUsername")
-                {
+                case "DuplicateUsername":
                     _logger.LogWarning("VALIDATION ERROR: Username is already taken");
                     return ServiceResult<string>.Failure(Error.User.UsernameAlreadyExists());
-                }
-                if (error.Code == "InvalidUsername")
-                {
+                case "InvalidUsername":
                     _logger.LogWarning("VALIDATION ERROR: Username is invalid");
                     return ServiceResult<string>.Failure(Error.Validation.InvalidInput());
-                }
-
-                _logger.LogWarning($"Error occurred: \n Code: {error.Code} {error.Description}");
+                default:
+                    _logger.LogWarning("Error occurred: \n Code: {code} {description}", error.Code, error.Description);
+                    break;
             }
-            return ServiceResult<string>.Failure(identityErrors);
         }
+        return ServiceResult<string>.Failure(identityErrors);
 
-        return ServiceResult<string>.Success(dto.UserName);
     }
 
     private async Task<User> GetUserForUpdateAsync(string userId)
@@ -268,9 +232,6 @@ public class UserService : IUserService
 
         var user = await _userManager.FindByIdAsync(userId);
 
-        if (user is null)
-            throw new InvalidOperationException("CRITICAL ERROR: User is null");
-
-        return user;
+        return user ?? throw new InvalidOperationException("CRITICAL ERROR: User is null");
     }
 }
