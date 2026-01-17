@@ -22,7 +22,7 @@ namespace WorkoutTrackerApi.Controllers
 
 
         [HttpGet("overview")]
-        public async Task<IActionResult> GetMyWorkoutsPage(
+        public async Task<ActionResult<ApiResponse<WorkoutPageDto>>> GetMyWorkoutsPage(
             [FromQuery] string sortBy = "newest", 
             [FromQuery] string searchBy = "", 
             [FromQuery] DateTime? date = null, 
@@ -30,19 +30,14 @@ namespace WorkoutTrackerApi.Controllers
         {
             string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var queryParams = new QueryParams(page, searchBy, sortBy, date);
-
-            if (string.IsNullOrEmpty(userId))
-            {
-                throw new InvalidOperationException("An error occurred. User ID is null");
-            }
             
-            var getWorkoutsResult = await _workoutService.GetUserWorkoutsPagedAsync(queryParams, userId);
+            var getWorkoutsResult = await _workoutService.GetUserWorkoutsPagedAsync(queryParams, userId!);
 
-            return getWorkoutsResult.ToIActionResult();
+            return ApiResponse<WorkoutPageDto>.Success("", getWorkoutsResult);
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMyWorkoutsByQueryParams(
+        public async Task<ActionResult<ApiResponse<PagedResult<WorkoutListItemDto>>>> GetMyWorkoutsByQueryParams(
             [FromQuery] string sortBy = "newest", 
             [FromQuery] string searchBy = "", 
             [FromQuery] DateTime? date = null, 
@@ -51,32 +46,29 @@ namespace WorkoutTrackerApi.Controllers
             var queryParams = new QueryParams(page, searchBy, sortBy, date);
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var getWorkoutsResult = await _workoutService.GetUserWorkoutsByQueryParamsAsync(queryParams, userId!);
+            var workouts = await _workoutService.GetUserWorkoutsByQueryParamsAsync(queryParams, userId!);
 
-            return getWorkoutsResult.ToIActionResult();
+            return ApiResponse<PagedResult<WorkoutListItemDto>>.Success("Success", workouts);
         }
 
         [HttpGet("workout/{id:int}")]
-        public async Task<IActionResult> GetWorkout([FromRoute] int id)
+        public async Task<ActionResult> GetWorkout([FromRoute] int id)
         {
             var workouts = await _workoutService.GetWorkoutByIdAsync(id);
             
-            return workouts.ToIActionResult();
+            return workouts.ToActionResult();
         }
 
         [HttpDelete("delete/{id:int}")]
-        public async Task<IActionResult> DeleteWorkout([FromRoute] int id)
+        public async Task<ActionResult> DeleteWorkout([FromRoute] int id)
         {
             var workoutDeleteResult = await _workoutService.DeleteWorkoutAsync(id, User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-
-
-            return workoutDeleteResult.ToIActionResult();
-
+            return workoutDeleteResult.ToActionResult();
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddWorkout([FromBody] WorkoutCreateRequest request)
+        public async Task<ActionResult> AddWorkout([FromBody] WorkoutCreateRequest request)
         {
 
             request.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
@@ -84,7 +76,7 @@ namespace WorkoutTrackerApi.Controllers
             var addResult = await _workoutService.AddWorkoutAsync(request);
 
 
-            return addResult.ToIActionResult();
+            return addResult.ToActionResult();
         }
         
     }
