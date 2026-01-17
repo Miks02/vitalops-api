@@ -6,9 +6,9 @@ namespace WorkoutTrackerApi.Services.Interfaces;
 
 public interface IWorkoutService
 {
-    Task<ServiceResult<WorkoutPageDto>> GetUserWorkoutsPagedAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default);
+    Task<WorkoutPageDto> GetUserWorkoutsPagedAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default);
 
-    Task<ServiceResult<PagedResult<WorkoutListItemDto>>> GetUserWorkoutsByQueryParamsAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default);
+    Task<PagedResult<WorkoutListItemDto>> GetUserWorkoutsByQueryParamsAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default);
     
     Task<IReadOnlyList<WorkoutListItemDto>> GetRecentWorkoutsAsync(string userId, int itemsToTake, CancellationToken cancellationToken = default);
 

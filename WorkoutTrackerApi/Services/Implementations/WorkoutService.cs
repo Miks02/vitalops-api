@@ -28,7 +28,7 @@ public class WorkoutService : IWorkoutService
         _context = context;
     }
 
-    public async Task<ServiceResult<WorkoutPageDto>> GetUserWorkoutsPagedAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
+    public async Task<WorkoutPageDto> GetUserWorkoutsPagedAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(userId))
             throw new InvalidOperationException("CRITICAL ERROR: user id is null or empty");
@@ -51,10 +51,10 @@ public class WorkoutService : IWorkoutService
 
 
 
-        return ServiceResult<WorkoutPageDto>.Success(workoutPage);
+        return workoutPage;
     }
 
-    public async Task<ServiceResult<PagedResult<WorkoutListItemDto>>> GetUserWorkoutsByQueryParamsAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<WorkoutListItemDto>> GetUserWorkoutsByQueryParamsAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(userId))
             throw new InvalidOperationException("CRITICAL ERROR: user id is null or empty");
@@ -69,7 +69,7 @@ public class WorkoutService : IWorkoutService
 
         var pagedResult = new PagedResult<WorkoutListItemDto>(paginatedWorkouts, queryParams.Page, _pageSize, totalPaginatedWorkouts, totalWorkouts);
 
-        return ServiceResult<PagedResult<WorkoutListItemDto>>.Success(pagedResult);
+        return pagedResult;
     }
 
     public async Task<IReadOnlyList<WorkoutListItemDto>> GetRecentWorkoutsAsync(string userId, int itemsToTake, CancellationToken cancellationToken = default)
