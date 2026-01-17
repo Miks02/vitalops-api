@@ -35,7 +35,7 @@ public class WorkoutService : IWorkoutService
 
         var query = QueryBuilder(queryParams, userId);
         
-        int totalPaginatedWorkouts = await query.CountAsync();
+        int totalPaginatedWorkouts = await query.CountAsync(cancellationToken);
         int totalWorkouts = await CountWorkouts(queryParams, userId);
 
         var pagedWorkouts = await query.ToListAsync(cancellationToken);
@@ -67,9 +67,7 @@ public class WorkoutService : IWorkoutService
 
         var totalWorkouts = await CountWorkouts(queryParams, userId);
 
-        var pagedResult = new PagedResult<WorkoutListItemDto>(paginatedWorkouts, queryParams.Page, _pageSize, totalPaginatedWorkouts, totalWorkouts);
-
-        return pagedResult;
+        return new PagedResult<WorkoutListItemDto>(paginatedWorkouts, queryParams.Page, _pageSize, totalPaginatedWorkouts, totalWorkouts); 
     }
 
     public async Task<IReadOnlyList<WorkoutListItemDto>> GetRecentWorkoutsAsync(string userId, int itemsToTake, CancellationToken cancellationToken = default)
@@ -121,7 +119,7 @@ public class WorkoutService : IWorkoutService
             .Select(w => w.WorkoutDate)
             .ToListAsync(cancellationToken);
 
-        if (!workoutDates.Any())
+        if (workoutDates.Count == 0)
             return null;
 
         int streak = 0;
@@ -130,14 +128,11 @@ public class WorkoutService : IWorkoutService
 
         foreach (var date in workoutDates)
         {
-            if (date.Day == currentDate.Day)
-            {
-                streak++;
-                currentDate = currentDate.AddDays(-1);
-            }
-            else
+            if (date.Day != currentDate.Day)
                 break;
 
+            streak++;
+            currentDate = currentDate.AddDays(-1);
         }
 
         return streak;
@@ -187,7 +182,7 @@ public class WorkoutService : IWorkoutService
         }
 
 
-        _logger.LogInformation("Workout has been added successfully: " + newWorkout);
+        _logger.LogInformation("Workout has been added successfully: {workout}", newWorkout);
 
         var workoutDto = MapToWorkoutDetailsDto().Invoke(newWorkout);
 
@@ -211,7 +206,7 @@ public class WorkoutService : IWorkoutService
         }
         catch (DbUpdateException ex)
         {
-            _logger.LogError("CRITICAL: Error happened deleting workout from the database" + ex.Message);
+            _logger.LogError("CRITICAL: Error happened deleting workout from the database \n {message}", ex.Message);
             return ServiceResult<WorkoutDetailsDto>.Failure(Error.Database.SaveChangesFailed());
         }
         
@@ -391,7 +386,7 @@ public class WorkoutService : IWorkoutService
         };
     }
 
-    private TimeSpan? ValidateMinutesAndSeconds(int? minutes, int? seconds)
+    private static TimeSpan? ValidateMinutesAndSeconds(int? minutes, int? seconds)
     {
         if (minutes is null || seconds is null)
             return null;
