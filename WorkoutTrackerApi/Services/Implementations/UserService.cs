@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using WorkoutTrackerApi.DTO.User;
 using WorkoutTrackerApi.Enums;
+using WorkoutTrackerApi.Extensions;
 using WorkoutTrackerApi.Models;
 using WorkoutTrackerApi.Services.Interfaces;
 using WorkoutTrackerApi.Services.Results;
@@ -50,13 +51,7 @@ public class UserService : IUserService
     {
         var result = await _userManager.DeleteAsync(user);
 
-        if (!result.Succeeded)
-        {
-            var identityErrors = result.Errors.Select(e => new Error(e.Code, e.Description));
-            return ServiceResult.Failure(identityErrors.ToArray());
-        }
-        
-        return ServiceResult.Success();
+        return result.HandleIdentityResult(_logger);
     }
 
     public async Task<ServiceResult> DeleteUserAsync(string id, CancellationToken cancellationToken = default)
@@ -79,14 +74,7 @@ public class UserService : IUserService
 
         var updateResult = await _userManager.UpdateAsync(user);
 
-        if (updateResult.Succeeded)
-            return ServiceResult<DateTime>.Success(dto.DateOfBirth);
-
-        foreach (var error in updateResult.Errors)
-            _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
-        
-        return ServiceResult<DateTime>.Failure(updateResult.Errors.ToArray());
-
+        return updateResult.HandleIdentityResult(dto.DateOfBirth, _logger);
     }
 
     public async Task<ServiceResult<double>> UpdateWeightAsync(UpdateWeightDto dto, string userId, CancellationToken cancellationToken = default)
@@ -97,13 +85,7 @@ public class UserService : IUserService
 
         var updateResult = await _userManager.UpdateAsync(user);
 
-        if (updateResult.Succeeded)
-            return ServiceResult<double>.Success(dto.Weight);
-
-        foreach (var error in updateResult.Errors)
-            _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
-        
-        return ServiceResult<double>.Failure(updateResult.Errors.ToArray());
+        return updateResult.HandleIdentityResult(dto.Weight, _logger);
 
     }
 
@@ -115,13 +97,8 @@ public class UserService : IUserService
 
         var updateResult = await _userManager.UpdateAsync(user);
 
-        if (updateResult.Succeeded)
-            return ServiceResult<double>.Success(dto.Height);
-
-        foreach (var error in updateResult.Errors)
-            _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
         
-        return ServiceResult<double>.Failure(updateResult.Errors.ToArray());
+        return updateResult.HandleIdentityResult(dto.Height, _logger);
 
     }
 
@@ -133,13 +110,7 @@ public class UserService : IUserService
 
         var updateResult = await _userManager.UpdateAsync(user);
 
-        if (updateResult.Succeeded)
-            return ServiceResult<Gender>.Success(dto.Gender);
-
-        foreach (var error in updateResult.Errors)
-            _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
-        
-        return ServiceResult<Gender>.Failure(updateResult.Errors.ToArray());
+        return updateResult.HandleIdentityResult(dto.Gender, _logger);
     }
 
     public async Task<ServiceResult<UpdateFullNameDto>> UpdateFullNameAsync(UpdateFullNameDto dto, string userId, CancellationToken cancellationToken = default)
@@ -151,14 +122,7 @@ public class UserService : IUserService
 
         var updateResult = await _userManager.UpdateAsync(user);
 
-        if (updateResult.Succeeded)
-            return ServiceResult<UpdateFullNameDto>.Success(dto);
-
-        foreach (var error in updateResult.Errors)
-            _logger.LogWarning("Code: {code} Description: {description}", error.Code, error.Description);
-        
-        return ServiceResult<UpdateFullNameDto>.Failure(updateResult.Errors.ToArray());
-
+        return updateResult.HandleIdentityResult(dto, _logger);
     }
 
     public async Task<ServiceResult<string>> UpdateEmailAsync(UpdateEmailDto dto, string userId, CancellationToken cancellationToken = default)
@@ -169,28 +133,7 @@ public class UserService : IUserService
 
         var updateResult = await _userManager.UpdateAsync(user);
 
-        if (updateResult.Succeeded)
-            return ServiceResult<string>.Success(dto.Email);
-
-        var identityErrors = updateResult.Errors.ToArray();
-
-        foreach(var error in identityErrors)
-        {
-            switch (error.Code)
-            {
-                case "DuplicateEmail":
-                    _logger.LogWarning("VALIDATION ERROR: Email is already taken");
-                    return ServiceResult<string>.Failure(Error.User.EmailAlreadyExists());
-                case "InvalidEmail":
-                    _logger.LogWarning("VALIDATION ERROR: Email is invalid");
-                    return ServiceResult<string>.Failure(Error.Validation.InvalidInput());
-                default:
-                    _logger.LogWarning("Error occurred: \n Code: {code} {description}", error.Code, error.Description);
-                    break;
-            }
-        }
-        return ServiceResult<string>.Failure(identityErrors);
-
+        return updateResult.HandleIdentityResult(dto.Email, _logger);
     }
 
     public async Task<ServiceResult<string>> UpdateUserNameAsync(UpdateUserNameDto dto, string userId, CancellationToken cancellationToken = default)
@@ -201,27 +144,7 @@ public class UserService : IUserService
 
         var updateResult = await _userManager.UpdateAsync(user);
 
-        if (updateResult.Succeeded)
-            return ServiceResult<string>.Success(dto.UserName);
-
-        var identityErrors = updateResult.Errors.ToArray();
-
-        foreach (var error in identityErrors)
-        {
-            switch (error.Code)
-            {
-                case "DuplicateUsername":
-                    _logger.LogWarning("VALIDATION ERROR: Username is already taken");
-                    return ServiceResult<string>.Failure(Error.User.UsernameAlreadyExists());
-                case "InvalidUsername":
-                    _logger.LogWarning("VALIDATION ERROR: Username is invalid");
-                    return ServiceResult<string>.Failure(Error.Validation.InvalidInput());
-                default:
-                    _logger.LogWarning("Error occurred: \n Code: {code} {description}", error.Code, error.Description);
-                    break;
-            }
-        }
-        return ServiceResult<string>.Failure(identityErrors);
+        return updateResult.HandleIdentityResult(dto.UserName, _logger);
 
     }
 
