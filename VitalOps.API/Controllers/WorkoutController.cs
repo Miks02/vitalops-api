@@ -76,7 +76,7 @@ namespace VitalOps.API.Controllers
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             
-            var addResult = await _workoutService.AddWorkoutAsync(request, null);
+            var addResult = await _workoutService.AddWorkoutAsync(request, userId);
 
 
             return addResult.ToActionResult();

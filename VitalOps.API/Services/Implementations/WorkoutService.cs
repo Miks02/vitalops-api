@@ -156,7 +156,10 @@ public class WorkoutService : IWorkoutService
 
     }
 
-    public async Task<Result<WorkoutDetailsDto>> AddWorkoutAsync(WorkoutCreateRequest request, string? userId, CancellationToken cancellationToken = default)
+    public async Task<Result<WorkoutDetailsDto>> AddWorkoutAsync(
+        WorkoutCreateRequest request,
+        string? userId,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(userId))
             throw new InvalidOperationException("CRITICAL ERROR: User id is null or empty");

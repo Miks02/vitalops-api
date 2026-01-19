@@ -14,7 +14,6 @@ public interface IWorkoutService
 
     Task<int?> CalculateWorkoutStreakAsync(string userId, CancellationToken cancellationToken = default);
    
-    Task<Result<WorkoutDetailsDto>> AddWorkoutAsync(WorkoutCreateRequest request, string? userId,
-        CancellationToken cancellationToken = bad);
+    Task<Result<WorkoutDetailsDto>> AddWorkoutAsync(WorkoutCreateRequest request, string? userId, CancellationToken cancellationToken = default);
     Task<Result> DeleteWorkoutAsync(int id, string userId, CancellationToken cancellationToken = default);
 }
