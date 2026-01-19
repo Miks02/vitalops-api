@@ -53,9 +53,11 @@ namespace VitalOps.API.Controllers
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult> GetWorkout([FromRoute] int id)
+        public async Task<ActionResult> GetMyWorkout([FromRoute] int id)
         {
-            var workout = await _workoutService.GetWorkoutByIdAsync(id);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var workout = await _workoutService.GetWorkoutByIdAsync(id, userId);
             
             return workout.ToActionResult();
         }
@@ -72,9 +74,9 @@ namespace VitalOps.API.Controllers
         public async Task<ActionResult> AddWorkout([FromBody] WorkoutCreateRequest request)
         {
 
-            request.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             
-            var addResult = await _workoutService.AddWorkoutAsync(request);
+            var addResult = await _workoutService.AddWorkoutAsync(request, null);
 
 
             return addResult.ToActionResult();

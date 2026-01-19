@@ -49,8 +49,6 @@ public class WorkoutService : IWorkoutService
             WorkoutSummary = workoutSummary
         };
 
-
-
         return workoutPage;
     }
 
@@ -72,7 +70,9 @@ public class WorkoutService : IWorkoutService
 
     public async Task<IReadOnlyList<WorkoutListItemDto>> GetRecentWorkoutsAsync(string userId, int itemsToTake, CancellationToken cancellationToken = default)
     {
-       
+        if (string.IsNullOrEmpty(userId))
+            throw new InvalidOperationException("CRITICAL ERROR: user id is null or empty");
+
         if (itemsToTake <= 0)
         {
             _logger.LogError("Items to take must be greater than zero");
@@ -91,16 +91,21 @@ public class WorkoutService : IWorkoutService
 
     }
 
-    public async Task<Result<WorkoutDetailsDto>> GetWorkoutByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<Result<WorkoutDetailsDto>> GetWorkoutByIdAsync(int id, string? userId, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrEmpty(userId))
+            throw new InvalidOperationException("CRITICAL ERROR: user id is null or empty");
+
         var workout = await _context.Workouts
-            .Where(w => w.Id == id)
             .AsNoTracking()
-            .FirstOrDefaultAsync(cancellationToken: cancellationToken);
+            .Where(w => w.Id == id && w.UserId == userId)
+            .Include(w => w.ExerciseEntries)
+            .ThenInclude(e => e.Sets)
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (workout is null)
         {
-            _logger.LogInformation($"Workout with id {id} not found");
+            _logger.LogInformation("Workout with id {id} not found", id);
             return Result<WorkoutDetailsDto>.Failure(Error.Resource.NotFound("Workout"));
         }
 
@@ -151,14 +156,16 @@ public class WorkoutService : IWorkoutService
 
     }
 
-    public async Task<Result<WorkoutDetailsDto>> AddWorkoutAsync(WorkoutCreateRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<WorkoutDetailsDto>> AddWorkoutAsync(WorkoutCreateRequest request, string? userId, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrEmpty(userId))
+            throw new InvalidOperationException("CRITICAL ERROR: User id is null or empty");
 
         var newWorkout = new Workout()
         {
             Name = request.Name,
             Notes = request.Notes,
-            UserId = request.UserId,
+            UserId = userId,
             WorkoutDate = request.WorkoutDate,
             ExerciseEntries = request.ExerciseEntries.Select(e => new ExerciseEntry()
             {
@@ -378,6 +385,7 @@ public class WorkoutService : IWorkoutService
             Notes = w.Notes,
             UserId = w.UserId,
             CreatedAt = w.CreatedAt,
+            WorkoutDate = w.WorkoutDate,
             Exercises = w.ExerciseEntries.Select(e => new ExerciseEntryDto()
             {
                 Id = e.Id,
@@ -390,7 +398,6 @@ public class WorkoutService : IWorkoutService
                 DurationSeconds = e.Duration.ToIntegerFromNullableSeconds(),
                 Sets = e.Sets.Select(s => new SetEntryDto()
                 {
-                    Id = s.Id,
                     Reps = s.Reps,
                     WeightKg = s.WeightKg
                 }).ToList()
