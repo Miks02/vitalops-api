@@ -32,8 +32,6 @@ public class WorkoutService : IWorkoutService
 
     public async Task<WorkoutPageDto> GetUserWorkoutsPagedAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(userId))
-            throw new InvalidOperationException("CRITICAL ERROR: user id is null or empty");
 
         var query = QueryBuilder(queryParams, userId);
         
@@ -54,8 +52,6 @@ public class WorkoutService : IWorkoutService
 
     public async Task<PagedResult<WorkoutListItemDto>> GetUserWorkoutsByQueryParamsAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(userId))
-            throw new InvalidOperationException("CRITICAL ERROR: user id is null or empty");
 
         var query = QueryBuilder(queryParams, userId);
 
@@ -70,8 +66,6 @@ public class WorkoutService : IWorkoutService
 
     public async Task<IReadOnlyList<WorkoutListItemDto>> GetRecentWorkoutsAsync(string userId, int itemsToTake, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(userId))
-            throw new InvalidOperationException("CRITICAL ERROR: user id is null or empty");
 
         if (itemsToTake <= 0)
         {
@@ -91,8 +85,6 @@ public class WorkoutService : IWorkoutService
 
     public async Task<Result<WorkoutDetailsDto>> GetWorkoutByIdAsync(int id, string? userId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(userId))
-            throw new InvalidOperationException("CRITICAL ERROR: user id is null or empty");
 
         var workout = await _context.Workouts
             .AsNoTracking()
@@ -160,33 +152,7 @@ public class WorkoutService : IWorkoutService
         if (string.IsNullOrEmpty(userId))
             throw new InvalidOperationException("CRITICAL ERROR: User id is null or empty");
 
-        var newWorkout = new Workout()
-        {
-            Name = request.Name,
-            Notes = request.Notes,
-            UserId = userId,
-            WorkoutDate = request.WorkoutDate,
-            ExerciseEntries = request.ExerciseEntries.Select(e => new ExerciseEntry()
-            {
-                Name = e.Name,
-                ExerciseType = e.ExerciseType,
-                CardioType = e.CardioType,
-                DistanceKm = e.DistanceKm,
-                Duration = ValidateMinutesAndSeconds(e.DurationMinutes, e.DurationSeconds),
-                AvgHeartRate = e.AvgHeartRate,
-                MaxHeartRate = e.MaxHeartRate,
-                CaloriesBurned = e.CaloriesBurned,
-                PaceMinPerKm = e.PaceMinPerKm,
-                WorkIntervalSec = e.WorkIntervalSec,
-                RestIntervalSec = e.RestIntervalSec,
-                IntervalsCount = e.IntervalsCount,
-                Sets = e.Sets.Select(s => new SetEntry()
-                {
-                    Reps = s.Reps,
-                    WeightKg = s.WeightKg
-                }).ToList()
-            }).ToList()
-        };
+        var newWorkout = request.ToWorkoutFromCreateRequest(userId);
 
         try
         {
@@ -225,7 +191,7 @@ public class WorkoutService : IWorkoutService
         catch (DbUpdateException ex)
         {
             _logger.LogError("CRITICAL: Error happened while deleting workout from the database \n {message}", ex.Message);
-            return Result<WorkoutDetailsDto>.Failure(Error.Database.SaveChangesFailed());
+            return Result.Failure(Error.Database.SaveChangesFailed());
         }
         
         _logger.LogInformation("Workout deleted successfully");
@@ -238,8 +204,6 @@ public class WorkoutService : IWorkoutService
             .AsNoTracking()
             .Include(w => w.ExerciseEntries)
             .AsQueryable();
-
-
 
         if (!string.IsNullOrWhiteSpace(userId))
             query = query.Where(w => w.UserId == userId);
@@ -361,17 +325,6 @@ public class WorkoutService : IWorkoutService
             FavoriteExerciseType = favoriteExerciseType
         };
 
-    }
-
-    private static TimeSpan? ValidateMinutesAndSeconds(int? minutes, int? seconds)
-    {
-        if (minutes is null || seconds is null)
-            return null;
-
-        TimeSpan fromMinutes = TimeSpan.FromMinutes((double)minutes);
-        TimeSpan fromSeconds = TimeSpan.FromSeconds((double)seconds);
-
-        return fromMinutes + fromSeconds;
     }
     
 }
