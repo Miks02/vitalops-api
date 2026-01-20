@@ -10,6 +10,7 @@ using VitalOps.API.Models;
 using VitalOps.API.Services.Interfaces;
 using VitalOps.API.Services.Results;
 using VitalOps.API.Extensions;
+using VitalOps.API.Mappers;
 
 namespace VitalOps.API.Services.Implementations;
 
@@ -20,9 +21,10 @@ public class WorkoutService : IWorkoutService
     private readonly int _pageSize = 8;
 
     public WorkoutService
-        (   
+            (   
             ILogger<WorkoutService> logger,
-            AppDbContext context)
+            AppDbContext context
+            )
     {
         _logger = logger;
         _context = context;
@@ -43,13 +45,11 @@ public class WorkoutService : IWorkoutService
 
         var pagedResult = new PagedResult<WorkoutListItemDto>(pagedWorkouts, queryParams.Page, _pageSize, totalPaginatedWorkouts, totalWorkouts);
 
-        var workoutPage = new WorkoutPageDto
+        return new WorkoutPageDto()
         {
             PagedWorkouts = pagedResult,
             WorkoutSummary = workoutSummary
         };
-
-        return workoutPage;
     }
 
     public async Task<PagedResult<WorkoutListItemDto>> GetUserWorkoutsByQueryParamsAsync(QueryParams queryParams, string userId, CancellationToken cancellationToken = default)
@@ -79,15 +79,13 @@ public class WorkoutService : IWorkoutService
             throw new ArgumentOutOfRangeException(nameof(itemsToTake), "Items to take must be greater than zero");
         }
 
-        var recentWorkouts = await _context.Workouts
+        return await _context.Workouts
             .AsNoTracking()
             .Where(w => w.UserId == userId)
             .OrderByDescending(w => w.WorkoutDate)
             .Take(itemsToTake)
-            .Select(ProjectToWorkoutListItemDto())
+            .Select(w => w.ToWorkoutListItemDto())
             .ToListAsync(cancellationToken);
-
-        return recentWorkouts;
 
     }
 
@@ -109,21 +107,19 @@ public class WorkoutService : IWorkoutService
             return Result<WorkoutDetailsDto>.Failure(Error.Resource.NotFound("Workout"));
         }
 
-        var workoutDto = MapToWorkoutDetailsDto().Invoke(workout);
+        var workoutDto = workout.ToWorkoutDetailsDto();
 
         return Result<WorkoutDetailsDto>.Success(workoutDto);
     }
 
     public async Task<DateTime?> GetLastUserWorkoutAsync(string userId, CancellationToken cancellationToken = default)
     {
-        var lastWorkout = await _context.Workouts
+        return await _context.Workouts
             .AsNoTracking()
             .OrderByDescending(w => w.WorkoutDate)
             .Where(w => w.UserId == userId)
             .Select(w => w.WorkoutDate)
             .FirstOrDefaultAsync(cancellationToken);
-
-        return lastWorkout;
     }
 
     public async Task<int?> CalculateWorkoutStreakAsync(string userId, CancellationToken cancellationToken = default)
@@ -206,7 +202,7 @@ public class WorkoutService : IWorkoutService
 
         _logger.LogInformation("Workout has been added successfully: {workout}", newWorkout);
 
-        var workoutDto = MapToWorkoutDetailsDto().Invoke(newWorkout);
+        var workoutDto = newWorkout.ToWorkoutDetailsDto();
 
         return Result<WorkoutDetailsDto>.Success(workoutDto);
     }
@@ -228,7 +224,7 @@ public class WorkoutService : IWorkoutService
         }
         catch (DbUpdateException ex)
         {
-            _logger.LogError("CRITICAL: Error happened deleting workout from the database \n {message}", ex.Message);
+            _logger.LogError("CRITICAL: Error happened while deleting workout from the database \n {message}", ex.Message);
             return Result<WorkoutDetailsDto>.Failure(Error.Database.SaveChangesFailed());
         }
         
@@ -239,8 +235,12 @@ public class WorkoutService : IWorkoutService
     private IQueryable<WorkoutListItemDto> QueryBuilder(QueryParams queryParams, string? userId = "")
     {
         var query = _context.Workouts
-            .AsNoTracking();
-            
+            .AsNoTracking()
+            .Include(w => w.ExerciseEntries)
+            .AsQueryable();
+
+
+
         if (!string.IsNullOrWhiteSpace(userId))
             query = query.Where(w => w.UserId == userId);
 
@@ -272,7 +272,7 @@ public class WorkoutService : IWorkoutService
             .Skip((queryParams.Page - 1) * _pageSize)
             .Take(_pageSize);
 
-        return query.Select(ProjectToWorkoutListItemDto());
+        return query.Select(w => w.ToWorkoutListItemDto());
 
     }
 
@@ -319,7 +319,7 @@ public class WorkoutService : IWorkoutService
             query = query.Where(w => w.WorkoutDate == queryParams.Date);
         }
 
-        return await query.Select(ProjectToWorkoutListItemDto()).CountAsync();
+        return await query.Select(w => w.ToWorkoutListItemDto()).CountAsync();
 
     }
 
@@ -361,51 +361,6 @@ public class WorkoutService : IWorkoutService
             FavoriteExerciseType = favoriteExerciseType
         };
 
-    }
- 
-    private static Expression<Func<Workout, WorkoutListItemDto>> ProjectToWorkoutListItemDto()
-    {
-        return w => new WorkoutListItemDto()
-        {
-            Id = w.Id,
-            Name = w.Name,
-            ExerciseCount = w.ExerciseEntries.Count,
-            SetCount = w.ExerciseEntries.Sum(e => e.Sets.Count),
-            WorkoutDate = w.WorkoutDate,
-            HasCardio = w.ExerciseEntries.Any(e => e.ExerciseType == ExerciseType.Cardio),
-            HasWeights = w.ExerciseEntries.Any(e => e.ExerciseType == ExerciseType.WeightLifting),
-            HasBodyWeight = w.ExerciseEntries.Any(e => e.ExerciseType == ExerciseType.BodyWeight)
-        };
-
-    }
-
-    private static Func<Workout, WorkoutDetailsDto> MapToWorkoutDetailsDto()
-    {
-        return w => new WorkoutDetailsDto
-        {
-            Id = w.Id,
-            Name = w.Name,
-            Notes = w.Notes,
-            UserId = w.UserId,
-            CreatedAt = w.CreatedAt,
-            WorkoutDate = w.WorkoutDate,
-            Exercises = w.ExerciseEntries.Select(e => new ExerciseEntryDto()
-            {
-                Id = e.Id,
-                Name = e.Name,
-                ExerciseType = e.ExerciseType,
-                AvgHeartRate = e.AvgHeartRate,
-                CaloriesBurned = e.CaloriesBurned,
-                DistanceKm = e.DistanceKm,
-                DurationMinutes = e.Duration.ToIntegerFromNullableMinutes(),
-                DurationSeconds = e.Duration.ToIntegerFromNullableSeconds(),
-                Sets = e.Sets.Select(s => new SetEntryDto()
-                {
-                    Reps = s.Reps,
-                    WeightKg = s.WeightKg
-                }).ToList()
-            }).ToList()
-        };
     }
 
     private static TimeSpan? ValidateMinutesAndSeconds(int? minutes, int? seconds)
