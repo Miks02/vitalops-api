@@ -1,15 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
 using VitalOps.API.Data;
-using VitalOps.API.DTO.ExerciseEntry;
 using VitalOps.API.DTO.Global;
-using VitalOps.API.DTO.SetEntry;
 using VitalOps.API.DTO.Workout;
-using VitalOps.API.Enums;
-using VitalOps.API.Models;
 using VitalOps.API.Services.Interfaces;
 using VitalOps.API.Services.Results;
-using VitalOps.API.Extensions;
 using VitalOps.API.Mappers;
 
 namespace VitalOps.API.Services.Implementations;
@@ -116,32 +110,28 @@ public class WorkoutService : IWorkoutService
 
     public async Task<int?> CalculateWorkoutStreakAsync(string userId, CancellationToken cancellationToken = default)
     {
-
         var workoutDates = await _context.Workouts
             .AsNoTracking()
-            .OrderByDescending(w => w.WorkoutDate)
             .Where(w => w.UserId == userId)
-            .Select(w => w.WorkoutDate)
+            .Select(w => w.WorkoutDate.Date)
+            .Distinct()
+            .OrderByDescending(d => d)
             .ToListAsync(cancellationToken);
 
-        if (workoutDates.Count == 0)
+        if (!workoutDates.Any())
             return null;
 
+        var dateSet = workoutDates.ToHashSet();
+        var currentDay = DateTime.UtcNow.Date;
         int streak = 0;
 
-        DateTime currentDate = DateTime.UtcNow;
-
-        foreach (var date in workoutDates)
+        while (dateSet.Contains(currentDay))
         {
-            if (date.Day != currentDate.Day)
-                continue;
-
             streak++;
-            currentDate = currentDate.AddDays(-1);
+            currentDay = currentDay.AddDays(-1);
         }
 
         return streak;
-
     }
 
     public async Task<Result<WorkoutDetailsDto>> AddWorkoutAsync(
