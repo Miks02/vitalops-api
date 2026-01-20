@@ -3,7 +3,9 @@ using VitalOps.API.DTO.SetEntry;
 using VitalOps.API.DTO.Workout;
 using VitalOps.API.Enums;
 using VitalOps.API.Extensions;
+using VitalOps.API.Helpers;
 using VitalOps.API.Models;
+using static VitalOps.API.Services.Results.Error;
 
 namespace VitalOps.API.Mappers
 {
@@ -46,6 +48,37 @@ namespace VitalOps.API.Mappers
                     DurationMinutes = e.Duration.ToIntegerFromNullableMinutes(),
                     DurationSeconds = e.Duration.ToIntegerFromNullableSeconds(),
                     Sets = e.Sets.Select(s => new SetEntryDto()
+                    {
+                        Reps = s.Reps,
+                        WeightKg = s.WeightKg
+                    }).ToList()
+                }).ToList()
+            };
+        }
+
+        public static Workout ToWorkoutFromCreateRequest(this WorkoutCreateRequest request, string userId)
+        {
+            return new Workout()
+            {
+                Name = request.Name,
+                Notes = request.Notes,
+                UserId = userId,
+                WorkoutDate = request.WorkoutDate,
+                ExerciseEntries = request.ExerciseEntries.Select(e => new ExerciseEntry()
+                {
+                    Name = e.Name,
+                    ExerciseType = e.ExerciseType,
+                    CardioType = e.CardioType,
+                    DistanceKm = e.DistanceKm,
+                    Duration = Utility.ValidateMinutesAndSeconds(e.DurationMinutes, e.DurationSeconds),
+                    AvgHeartRate = e.AvgHeartRate,
+                    MaxHeartRate = e.MaxHeartRate,
+                    CaloriesBurned = e.CaloriesBurned,
+                    PaceMinPerKm = e.PaceMinPerKm,
+                    WorkIntervalSec = e.WorkIntervalSec,
+                    RestIntervalSec = e.RestIntervalSec,
+                    IntervalsCount = e.IntervalsCount,
+                    Sets = e.Sets.Select(s => new SetEntry()
                     {
                         Reps = s.Reps,
                         WeightKg = s.WeightKg
