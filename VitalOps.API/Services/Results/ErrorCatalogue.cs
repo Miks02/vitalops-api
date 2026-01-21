@@ -30,6 +30,9 @@ public sealed class Error
 
         public static Error UnknownError(string message = "An unknown error occurred")
             => new("General.UnknownError", message);
+
+        public static Error LimitReached(string message = "Limit for this request has been reached")
+            => new("General.LimitReached", message);
     }
     
     public static class Resource

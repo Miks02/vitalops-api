@@ -154,7 +154,7 @@ public class WorkoutService : IWorkoutService
             .OrderByDescending(d => d)
             .ToListAsync(cancellationToken);
 
-        if (!workoutDates.Any())
+        if (workoutDates.Count == 0)
             return null;
 
         var dateSet = workoutDates.ToHashSet();
@@ -175,6 +175,19 @@ public class WorkoutService : IWorkoutService
         string userId,
         CancellationToken cancellationToken = default)
     {
+
+        var workoutsToday = await _context.Workouts
+            .AsNoTracking()
+            .Where(w => w.UserId == userId && w.CreatedAt.Date == DateTime.UtcNow.Date)
+            .Select(w => w.Id)
+            .CountAsync(cancellationToken);
+
+        if (workoutsToday == 5)
+        {
+            _logger.LogWarning("Creating a workout for user {id} has failed", userId);
+            return Result<WorkoutDetailsDto>.Failure(Error.General.LimitReached("Workout limit has been reached"));
+        }
+
         var newWorkout = request.ToWorkoutFromCreateRequest(userId);
 
         try
