@@ -78,7 +78,7 @@ namespace VitalOps.API.Services.Implementations
             if (weightEntriesToday == 1)
                 return Result<WeightEntryDetailsDto>.Failure(Error.General.LimitReached());
 
-            var newWeightEntry = new WeightEntry()
+            var newEntry = new WeightEntry()
             {
                 Weight = request.Weight,
                 Time = request.Time,
@@ -86,18 +86,42 @@ namespace VitalOps.API.Services.Implementations
                 Notes = request.Notes
             };
 
-            await _context.AddAsync(newWeightEntry, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                await _context.WeightEntries.AddAsync(newEntry, cancellationToken);
+
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Id == newEntry.UserId, cancellationToken);
+
+                if (user is null)
+                    return Result<WeightEntryDetailsDto>.Failure(Error.User.NotFound(userId));
+                
+
+                user.CurrentWeight = newEntry.Weight;
+
+                await _context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError(ex, "Transaction failed for User {UserId}. Rolling back.", newEntry.UserId);
+                await transaction.RollbackAsync(cancellationToken);
+                throw; 
+            }
+
+
 
             _logger.LogInformation("Weight logged successfully");
 
             var createdWeightEntry = new WeightEntryDetailsDto()
             {
-                Id = newWeightEntry.Id,
-                Weight = newWeightEntry.Weight,
-                Time = newWeightEntry.Time,
-                Notes = newWeightEntry.Notes,
-                CreatedAt = newWeightEntry.CreatedAt
+                Id = newEntry.Id,
+                Weight = newEntry.Weight,
+                Time = newEntry.Time,
+                Notes = newEntry.Notes,
+                CreatedAt = newEntry.CreatedAt
             };
 
             return Result<WeightEntryDetailsDto>.Success(createdWeightEntry);

@@ -32,7 +32,7 @@ public class UserService : IUserService
                 UserName = u.UserName!,
                 Email = u.Email!,
                 ImagePath = u.ImagePath,
-                Weight = u.TargetWeight,
+                CurrentWeight = u.CurrentWeight,
                 Height = u.HeightCm,
                 DateOfBirth = u.DateOfBirth,
                 RegisteredAt = u.CreatedAt,
@@ -75,18 +75,6 @@ public class UserService : IUserService
         var updateResult = await _userManager.UpdateAsync(user);
 
         return updateResult.HandleIdentityResult(dto.DateOfBirth, _logger);
-    }
-
-    public async Task<Result<double>> UpdateWeightAsync(UpdateWeightDto dto, string userId, CancellationToken cancellationToken = default)
-    {
-        var user = await GetUserForUpdateAsync(userId);
-
-        user.TargetWeight = dto.Weight;
-
-        var updateResult = await _userManager.UpdateAsync(user);
-
-        return updateResult.HandleIdentityResult(dto.Weight, _logger);
-
     }
 
     public async Task<Result<double>> UpdateHeightAsync(UpdateHeightDto dto, string userId, CancellationToken cancellationToken = default)
