@@ -17,6 +17,7 @@ public class AppDbContext : IdentityDbContext<User>
     public DbSet<Workout> Workouts { get; set; }
     public DbSet<ExerciseEntry> ExerciseEntries { get; set; }
     public DbSet<SetEntry> SetEntries { get; set; }
+    public DbSet<WeightEntry> WeightEntries { get; set; }
     public DbSet<CalorieEntry> CalorieEntries { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)

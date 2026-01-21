@@ -14,9 +14,8 @@ public class User : IdentityUser
     public DateTime? TokenExpDate { get; set; }
     
     public Gender? Gender { get; set; }
-    public ActivityLevel? ActivityLevel { get; set; }
     
-    public double? WeightKg { get; set; }
+    public double? TargetWeight { get; set; }
     public double? HeightCm { get; set; }
     public int? DailyCalorieGoal { get; set; }
 
@@ -25,6 +24,7 @@ public class User : IdentityUser
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? DateOfBirth { get; set; }
 
+    public ICollection<WeightEntry> WeightEntries { get; set; } = [];
     public ICollection<Workout> Workouts { get; set; } = [];
     public ICollection<CalorieEntry> CalorieEntries { get; set; } = [];
 

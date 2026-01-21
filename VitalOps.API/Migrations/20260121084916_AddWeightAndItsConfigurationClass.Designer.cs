@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VitalOps.API.Data;
 
@@ -11,9 +12,11 @@ using VitalOps.API.Data;
 namespace VitalOps.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260121084916_AddWeightAndItsConfigurationClass")]
+    partial class AddWeightAndItsConfigurationClass
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -304,6 +307,9 @@ namespace VitalOps.API.Migrations
                     b.Property<int>("AccountStatus")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ActivityLevel")
+                        .HasColumnType("int");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -376,9 +382,6 @@ namespace VitalOps.API.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double?>("TargetWeight")
-                        .HasColumnType("float");
-
                     b.Property<DateTime?>("TokenExpDate")
                         .HasColumnType("datetime2");
 
@@ -388,6 +391,9 @@ namespace VitalOps.API.Migrations
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<double?>("WeightKg")
+                        .HasColumnType("float");
 
                     b.HasKey("Id");
 

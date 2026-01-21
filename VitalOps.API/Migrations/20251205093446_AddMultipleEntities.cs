@@ -50,7 +50,7 @@ namespace VitalOps.API.Migrations
                 nullable: true);
 
             migrationBuilder.AddColumn<double>(
-                name: "WeightKg",
+                name: "TargetWeight",
                 table: "Users",
                 type: "float",
                 nullable: true);
@@ -143,7 +143,7 @@ namespace VitalOps.API.Migrations
                 {
                     table.PrimaryKey("PK_SetEntries", x => x.Id);
                     table.CheckConstraint("CK_SetEntrys_Reps_Positive", "Reps > 0");
-                    table.CheckConstraint("CK_SetEntrys_WeightKg_Positive", "WeightKg > 0");
+                    table.CheckConstraint("CK_SetEntrys_WeightKg_Positive", "TargetWeight > 0");
                     table.ForeignKey(
                         name: "FK_SetEntries_ExerciseEntries_ExerciseEntryId",
                         column: x => x.ExerciseEntryId,
@@ -245,7 +245,7 @@ namespace VitalOps.API.Migrations
                 table: "Users");
 
             migrationBuilder.DropColumn(
-                name: "WeightKg",
+                name: "TargetWeight",
                 table: "Users");
         }
     }

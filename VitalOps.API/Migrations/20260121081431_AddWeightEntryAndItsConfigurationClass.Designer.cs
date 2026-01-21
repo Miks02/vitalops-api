@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VitalOps.API.Data;
 
@@ -11,9 +12,11 @@ using VitalOps.API.Data;
 namespace VitalOps.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260121081431_AddWeightEntryAndItsConfigurationClass")]
+    partial class AddWeightEntryAndItsConfigurationClass
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -304,6 +307,9 @@ namespace VitalOps.API.Migrations
                     b.Property<int>("AccountStatus")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ActivityLevel")
+                        .HasColumnType("int");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -376,9 +382,6 @@ namespace VitalOps.API.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<double?>("TargetWeight")
-                        .HasColumnType("float");
-
                     b.Property<DateTime?>("TokenExpDate")
                         .HasColumnType("datetime2");
 
@@ -388,6 +391,9 @@ namespace VitalOps.API.Migrations
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<double?>("WeightKg")
+                        .HasColumnType("float");
 
                     b.HasKey("Id");
 
@@ -410,49 +416,6 @@ namespace VitalOps.API.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("VitalOps.API.Models.WeightEntry", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<TimeSpan>("Time")
-                        .HasColumnType("time");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<double>("Weight")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("Weight");
-
-                    b.ToTable("WeightEntries", t =>
-                        {
-                            t.HasCheckConstraint("CK_WeightEntrys_Weight_LessThan400", "Weight < 400");
-
-                            t.HasCheckConstraint("CK_WeightEntrys_Weight_Positive", "Weight > 25");
-                        });
-                });
-
             modelBuilder.Entity("VitalOps.API.Models.Workout", b =>
                 {
                     b.Property<int>("Id")
@@ -472,8 +435,8 @@ namespace VitalOps.API.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Notes")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -575,17 +538,6 @@ namespace VitalOps.API.Migrations
                     b.Navigation("ExerciseEntry");
                 });
 
-            modelBuilder.Entity("VitalOps.API.Models.WeightEntry", b =>
-                {
-                    b.HasOne("VitalOps.API.Models.User", "User")
-                        .WithMany("WeightEntries")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("VitalOps.API.Models.Workout", b =>
                 {
                     b.HasOne("VitalOps.API.Models.User", "User")
@@ -605,8 +557,6 @@ namespace VitalOps.API.Migrations
             modelBuilder.Entity("VitalOps.API.Models.User", b =>
                 {
                     b.Navigation("CalorieEntries");
-
-                    b.Navigation("WeightEntries");
 
                     b.Navigation("Workouts");
                 });
