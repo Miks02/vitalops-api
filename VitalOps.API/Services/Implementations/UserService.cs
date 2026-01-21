@@ -32,7 +32,7 @@ public class UserService : IUserService
                 UserName = u.UserName!,
                 Email = u.Email!,
                 ImagePath = u.ImagePath,
-                Weight = u.WeightKg,
+                Weight = u.TargetWeight,
                 Height = u.HeightCm,
                 DateOfBirth = u.DateOfBirth,
                 RegisteredAt = u.CreatedAt,
@@ -81,7 +81,7 @@ public class UserService : IUserService
     {
         var user = await GetUserForUpdateAsync(userId);
 
-        user.WeightKg = dto.Weight;
+        user.TargetWeight = dto.Weight;
 
         var updateResult = await _userManager.UpdateAsync(user);
 

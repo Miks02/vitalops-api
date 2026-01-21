@@ -16,9 +16,6 @@ namespace VitalOps.API.Services.Implementations
         public async Task<DashboardDto> LoadDashboardAsync(string userId, CancellationToken cancellationToken = default)
         {
 
-            if (userId is null)
-                throw new InvalidOperationException("Failed to load the dashboard, user id is null");
-
             var lastWorkoutDate = await _workoutService.GetLastUserWorkoutAsync(userId, cancellationToken);
             var recentWorkouts = await _workoutService.GetRecentWorkoutsAsync(userId, 10, cancellationToken);
 
