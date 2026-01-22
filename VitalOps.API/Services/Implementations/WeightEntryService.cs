@@ -82,8 +82,8 @@ namespace VitalOps.API.Services.Implementations
                 .Select(w => w.Id)
                 .CountAsync(cancellationToken);
 
-            //if (weightEntriesToday == 1)
-            //    return Result<WeightEntryDetailsDto>.Failure(Error.General.LimitReached());
+            if (weightEntriesToday == 1)
+                return Result<WeightEntryDetailsDto>.Failure(Error.General.LimitReached());
 
             var newEntry = new WeightEntry()
             {
