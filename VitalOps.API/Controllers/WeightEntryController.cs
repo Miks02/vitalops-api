@@ -39,5 +39,15 @@ namespace VitalOps.API.Controllers
             return result.ToActionResult();
         }
 
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteWeightEntry([FromRoute] int id, CancellationToken cancellationToken = default)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+            var result = await _weightService.DeleteEntryAsync(id, userId, cancellationToken);
+
+            return result.ToActionResult();
+        }
+
     }
 }

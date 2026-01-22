@@ -60,8 +60,6 @@ namespace VitalOps.API.Services.Implementations
                 Progress = progress,
                 WeightEntries = entries
             };
-                
-;
         }
 
         public async Task<Result<WeightEntryDetailsDto>> AddWeightEntryAsync(
@@ -96,22 +94,22 @@ namespace VitalOps.API.Services.Implementations
                     .FirstOrDefaultAsync(u => u.Id == newEntry.UserId, cancellationToken);
 
                 if (user is null)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
                     return Result<WeightEntryDetailsDto>.Failure(Error.User.NotFound(userId));
-                
+                }
 
                 user.CurrentWeight = newEntry.Weight;
 
                 await _context.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Transaction failed for User {UserId}. Rolling back.", newEntry.UserId);
                 await transaction.RollbackAsync(cancellationToken);
-                throw; 
+                throw;
             }
-
-
 
             _logger.LogInformation("Weight logged successfully");
 
@@ -125,7 +123,65 @@ namespace VitalOps.API.Services.Implementations
             };
 
             return Result<WeightEntryDetailsDto>.Success(createdWeightEntry);
-
         }
+
+        public async Task<Result> DeleteEntryAsync(int id, string userId, CancellationToken cancellationToken)
+        {
+            var entry = await _context.WeightEntries
+                .Where(w => w.Id == id && w.UserId == userId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (entry is null)
+                return Result.Failure(Error.Resource.NotFound("Weight entry"));
+
+
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+
+            try
+            {
+                _context.WeightEntries.Remove(entry);
+                await _context.SaveChangesAsync(cancellationToken);
+
+                var user = await _context.Users
+                    .Where(u => u.Id == userId)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (user is null)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    return Result.Failure(Error.Resource.NotFound(userId));
+                }
+
+                user.CurrentWeight = await GetLastWeightFromUser(user.Id, cancellationToken);
+
+                _logger.LogInformation("Current weight: {weight}", user.CurrentWeight);
+
+                await _context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Transaction failed for user {id} with exception: {ex}. Rolling back changes...", userId, ex);
+                await transaction.RollbackAsync(cancellationToken);
+                throw;
+            }
+
+            return Result.Success();
+        }
+
+        private async Task<double?> GetLastWeightFromUser(string userId, CancellationToken cancellationToken)
+        {
+            var lastWeight = await _context.WeightEntries
+                .OrderByDescending(w => w.CreatedAt)
+                .Where(w => w.UserId == userId)
+                .Select(w => w.Weight)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (lastWeight is 0)
+                return null;
+
+            return lastWeight;
+        }
+
     }
 }
