@@ -42,20 +42,29 @@ namespace VitalOps.API.Services.Implementations
                 .AsNoTracking()
                 .OrderBy(w => w.CreatedAt)
                 .Where(w => w.UserId == userId)
-                .Select(w => w.Weight)
+                .Select(w => new WeightRecordDto()
+                {
+                    Weight = w.Weight,
+                    CreatedAt = w.CreatedAt
+                })
                 .FirstOrDefaultAsync(cancellationToken);
 
             var lastWeightEntry = await _context.WeightEntries
                 .AsNoTracking()
                 .OrderByDescending(w => w.CreatedAt)
                 .Where(w => w.UserId == userId)
-                .Select(w => w.Weight)
+                .Select(w => new WeightRecordDto()
+                {
+                    Weight = w.Weight,
+                    CreatedAt = w.CreatedAt
+                })
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var progress = lastWeightEntry - firstWeightEntry;
+            var progress = lastWeightEntry!.Weight - firstWeightEntry!.Weight;
 
             return new WeightSummaryDto()
             {
+                FirstEntry = firstWeightEntry,
                 CurrentWeight = lastWeightEntry,
                 Progress = progress,
                 WeightEntries = entries
@@ -73,8 +82,8 @@ namespace VitalOps.API.Services.Implementations
                 .Select(w => w.Id)
                 .CountAsync(cancellationToken);
 
-            if (weightEntriesToday == 1)
-                return Result<WeightEntryDetailsDto>.Failure(Error.General.LimitReached());
+            //if (weightEntriesToday == 1)
+            //    return Result<WeightEntryDetailsDto>.Failure(Error.General.LimitReached());
 
             var newEntry = new WeightEntry()
             {
