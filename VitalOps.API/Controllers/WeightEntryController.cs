@@ -39,6 +39,14 @@ namespace VitalOps.API.Controllers
             return Ok(logs);
         }
 
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<WeightEntryDetailsDto?>> GetMyWeightLog([FromRoute] int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+            return await _weightService.GetUserWeightEntryByIdAsync(userId, id);
+        }
+
         [HttpPost]
         public async Task<ActionResult> AddWeightEntry([FromBody] WeightCreateRequestDto request, CancellationToken cancellationToken = default)
         {
