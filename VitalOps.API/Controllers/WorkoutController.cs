@@ -11,7 +11,7 @@ namespace VitalOps.API.Controllers
     [Authorize]
     [Route("api/workouts")]
     [ApiController]
-    public class WorkoutController : ControllerBase
+    public class WorkoutController : BaseController
     {
         private readonly IWorkoutService _workoutService;
         
@@ -28,10 +28,9 @@ namespace VitalOps.API.Controllers
             [FromQuery] DateTime? date = null, 
             [FromQuery] int page = 1 )
         {
-            string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var queryParams = new QueryParams(page, searchBy, sortBy, date);
             
-            var getWorkoutsResult = await _workoutService.GetUserWorkoutsPagedAsync(queryParams, userId!);
+            var getWorkoutsResult = await _workoutService.GetUserWorkoutsPagedAsync(queryParams, CurrentUserId);
 
             return Ok(getWorkoutsResult);
         }
@@ -44,9 +43,8 @@ namespace VitalOps.API.Controllers
             [FromQuery] int page = 1)
         {
             var queryParams = new QueryParams(page, searchBy, sortBy, date);
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var workouts = await _workoutService.GetUserWorkoutsByQueryParamsAsync(queryParams, userId!);
+            var workouts = await _workoutService.GetUserWorkoutsByQueryParamsAsync(queryParams, CurrentUserId);
 
             return Ok(workouts);
         }
@@ -54,9 +52,7 @@ namespace VitalOps.API.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult> GetMyWorkout([FromRoute] int id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            var workout = await _workoutService.GetWorkoutByIdAsync(id, userId);
+            var workout = await _workoutService.GetWorkoutByIdAsync(id, CurrentUserId);
             
             return workout.ToActionResult();
         }
@@ -64,9 +60,7 @@ namespace VitalOps.API.Controllers
         [HttpGet("workouts-per-month")]
         public async Task<ActionResult<WorkoutsPerMonthDto>> GetWorkoutsPerMonth([FromQuery] int? year)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            return await _workoutService.GetUserWorkoutCountsByMonthAsync(userId!, year);
+            return await _workoutService.GetUserWorkoutCountsByMonthAsync(CurrentUserId, year);
         }
 
         [HttpDelete("{id:int}")]
@@ -80,11 +74,7 @@ namespace VitalOps.API.Controllers
         [HttpPost]
         public async Task<ActionResult> AddWorkout([FromBody] WorkoutCreateRequest request)
         {
-
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            
-            var addResult = await _workoutService.AddWorkoutAsync(request, userId);
-
+            var addResult = await _workoutService.AddWorkoutAsync(request, CurrentUserId);
 
             return addResult.ToActionResult();
         }

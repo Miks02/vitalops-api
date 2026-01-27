@@ -13,7 +13,7 @@ namespace VitalOps.API.Controllers
     [Authorize]
     [Route("api/users")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class UserController : BaseController
     {
         private readonly IUserService _userService;
 
@@ -25,19 +25,17 @@ namespace VitalOps.API.Controllers
         [HttpGet("me")]
         public async Task<ActionResult<UserDetailsDto>> GetMe()
         {
-            var user = await _userService.GetUserDetailsAsync(GetUserId());
-
-            return user;
+            return await _userService.GetUserDetailsAsync(CurrentUserId);
         }
-             
+
         [HttpPatch("fullname")]
         public async Task<ActionResult<string>> UpdateFullName(
             [FromBody] UpdateFullNameDto fullName,
             CancellationToken cancellationToken = default
-            )
+        )
         {
 
-            var updateResult = await _userService.UpdateFullNameAsync(fullName, GetUserId(), cancellationToken);
+            var updateResult = await _userService.UpdateFullNameAsync(fullName, CurrentUserId, cancellationToken);
 
             return updateResult.ToActionResult();
 
@@ -45,11 +43,11 @@ namespace VitalOps.API.Controllers
 
         [HttpPatch("username")]
         public async Task<ActionResult<string>> UpdateUserName(
-            [FromBody] UpdateUserNameDto userName, 
+            [FromBody] UpdateUserNameDto userName,
             CancellationToken cancellationToken = default)
         {
 
-            var updateResult = await _userService.UpdateUserNameAsync(userName, GetUserId(), cancellationToken);
+            var updateResult = await _userService.UpdateUserNameAsync(userName, CurrentUserId, cancellationToken);
 
             return updateResult.ToActionResult();
         }
@@ -58,10 +56,10 @@ namespace VitalOps.API.Controllers
         public async Task<ActionResult<string>> UpdateEmail(
             [FromBody] UpdateEmailDto email,
             CancellationToken cancellationToken = default
-            )
+        )
         {
 
-            var updateResult = await _userService.UpdateEmailAsync(email, GetUserId(), cancellationToken);
+            var updateResult = await _userService.UpdateEmailAsync(email, CurrentUserId, cancellationToken);
 
             return updateResult.ToActionResult();
 
@@ -71,10 +69,10 @@ namespace VitalOps.API.Controllers
         public async Task<ActionResult<DateTime>> UpdateDateOfBirth(
             [FromBody] UpdateDateOfBirthDto dateOfBirth,
             CancellationToken cancellationToken = default
-            )
+        )
         {
 
-            var updateResult = await _userService.UpdateDateOfBirthAsync(dateOfBirth, GetUserId(), cancellationToken);
+            var updateResult = await _userService.UpdateDateOfBirthAsync(dateOfBirth, CurrentUserId, cancellationToken);
 
             return updateResult.ToActionResult();
 
@@ -84,10 +82,10 @@ namespace VitalOps.API.Controllers
         public async Task<ActionResult<Gender>> UpdateGender(
             [FromBody] UpdateGenderDto gender,
             CancellationToken cancellationToken = default
-            )
+        )
         {
 
-            var updateResult = await _userService.UpdateGenderAsync(gender, GetUserId(), cancellationToken);
+            var updateResult = await _userService.UpdateGenderAsync(gender, CurrentUserId, cancellationToken);
 
             return updateResult.ToActionResult();
 
@@ -97,10 +95,10 @@ namespace VitalOps.API.Controllers
         public async Task<ActionResult<double>> UpdateHeight(
             [FromBody] UpdateHeightDto height,
             CancellationToken cancellationToken = default
-            )
+        )
         {
 
-            var updateResult = await _userService.UpdateHeightAsync(height, GetUserId(), cancellationToken);
+            var updateResult = await _userService.UpdateHeightAsync(height, CurrentUserId, cancellationToken);
 
             return updateResult.ToActionResult();
 
@@ -113,17 +111,14 @@ namespace VitalOps.API.Controllers
         )
         {
 
-            var updateResult = await _userService.UpdateTargetWeightAsync(targetWeight, GetUserId(), cancellationToken);
+            var updateResult =
+                await _userService.UpdateTargetWeightAsync(targetWeight, CurrentUserId, cancellationToken);
 
             return updateResult.ToActionResult();
 
         }
 
-        private string GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-
     }
 
-    
 
-
-    }
+}

@@ -12,7 +12,7 @@ namespace VitalOps.API.Controllers
 {
     [Route("api/auth")]
     [ApiController]
-    public class AuthController : ControllerBase
+    public class AuthController : BaseController
     {
         private readonly IAuthService _authService;
 
@@ -46,7 +46,6 @@ namespace VitalOps.API.Controllers
         [HttpPost("logout")]
         public async Task<ActionResult> Logout()
         {
-            
             var result = await _authService.LogoutAsync(GetRefreshToken());
 
             DeleteRefreshTokenCookie();
@@ -58,8 +57,7 @@ namespace VitalOps.API.Controllers
         [HttpGet("test")]
         public ActionResult Test()
         {
-
-            return Ok(new { message = "You are authenticated", userId = $"{User.FindFirstValue(ClaimTypes.NameIdentifier)}"});
+            return Ok(new { message = "You are authenticated", userId = $"{CurrentUserId}"});
         }
 
         [HttpPost("refresh-token")]

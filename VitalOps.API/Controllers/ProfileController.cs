@@ -10,7 +10,7 @@ namespace VitalOps.API.Controllers
     [Authorize]
     [Route("api/profile")]
     [ApiController]
-    public class ProfileController : ControllerBase
+    public class ProfileController : BaseController
     {
         private readonly IProfileService _profileService;
 
@@ -22,10 +22,7 @@ namespace VitalOps.API.Controllers
         [HttpGet]
         public async Task<ActionResult<ProfilePageDto>> GetMyProfile(CancellationToken cancellationToken = default)
         {
-            string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-
-            return await _profileService.GetUserProfileAsync(userId!, cancellationToken);
+            return await _profileService.GetUserProfileAsync(CurrentUserId, cancellationToken);
         }
     }
 }

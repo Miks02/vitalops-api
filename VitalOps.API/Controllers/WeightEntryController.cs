@@ -1,9 +1,6 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VitalOps.API.DTO.Weight;
-using VitalOps.API.DTO.Workout;
 using VitalOps.API.Extensions;
 using VitalOps.API.Services.Interfaces;
 
@@ -12,7 +9,7 @@ namespace VitalOps.API.Controllers
     [Authorize]
     [Route("api/weight-entries")]
     [ApiController]
-    public class WeightEntryController : ControllerBase
+    public class WeightEntryController : BaseController
     {
         private readonly IWeightEntryService _weightService;
 
@@ -24,17 +21,13 @@ namespace VitalOps.API.Controllers
         [HttpGet]
         public async Task<ActionResult<WeightSummaryDto?>> GetMyWeightSummary(int? year = null, int? month = null, CancellationToken cancellationToken = default)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-
-            return await _weightService.GetUserWeightSummaryAsync(userId, year, month, cancellationToken);
+            return await _weightService.GetUserWeightSummaryAsync(CurrentUserId, year, month, cancellationToken);
         }
 
         [HttpGet("logs")]
         public async Task<ActionResult> GetMyWeightLogs(int? month = null, int? year = null, CancellationToken cancellationToken = default)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-                             
-            var logs = await _weightService.GetUserWeightLogsAsync(userId, month, year, cancellationToken);
+            var logs = await _weightService.GetUserWeightLogsAsync(CurrentUserId, month, year, cancellationToken);
 
             return Ok(logs);
         }
@@ -42,17 +35,14 @@ namespace VitalOps.API.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult<WeightEntryDetailsDto?>> GetMyWeightLog([FromRoute] int id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
 
-            return await _weightService.GetUserWeightEntryByIdAsync(userId, id);
+            return await _weightService.GetUserWeightEntryByIdAsync(CurrentUserId, id);
         }
 
         [HttpPost]
         public async Task<ActionResult> AddWeightEntry([FromBody] WeightCreateRequestDto request, CancellationToken cancellationToken = default)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-
-            var result = await _weightService.AddWeightEntryAsync(request, userId, cancellationToken);
+            var result = await _weightService.AddWeightEntryAsync(request, CurrentUserId, cancellationToken);
 
             return result.ToActionResult();
         }
@@ -60,9 +50,7 @@ namespace VitalOps.API.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeleteWeightEntry([FromRoute] int id, CancellationToken cancellationToken = default)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-
-            var result = await _weightService.DeleteEntryAsync(id, userId, cancellationToken);
+            var result = await _weightService.DeleteEntryAsync(id, CurrentUserId, cancellationToken);
 
             return result.ToActionResult();
         }

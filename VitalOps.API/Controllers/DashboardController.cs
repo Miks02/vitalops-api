@@ -10,7 +10,7 @@ namespace VitalOps.API.Controllers
     [Authorize]
     [Route("api/dashboard")]
     [ApiController]
-    public class DashboardController : ControllerBase
+    public class DashboardController : BaseController
     {
         private readonly IDashboardService _dashboardService;
         public DashboardController(IDashboardService dashboardService)
@@ -21,10 +21,7 @@ namespace VitalOps.API.Controllers
         [HttpGet]
         public async Task<ActionResult<DashboardDto>> GetDashboard(CancellationToken cancellationToken = default)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            return await _dashboardService.LoadDashboardAsync(userId!, cancellationToken);
-
+            return await _dashboardService.LoadDashboardAsync(CurrentUserId, cancellationToken);
         }
     }
 }
