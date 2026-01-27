@@ -6,7 +6,8 @@ namespace VitalOps.API.Services.Interfaces
 {
     public interface IWeightEntryService
     {
-        Task<WeightSummaryDto?> GetUserWeightSummaryAsync(string userId, CancellationToken cancellationToken);
+        Task<WeightSummaryDto?> GetUserWeightSummaryAsync(string userId, int? month, int? year, CancellationToken cancellationToken);
+        Task<IReadOnlyList<WeightRecordDto>> GetUserWeightLogsAsync(string userId, int? month, int? year, CancellationToken cancellationToken = default);
         Task<Result<WeightEntryDetailsDto>> AddWeightEntryAsync(WeightCreateRequestDto request, string userId, CancellationToken cancellationToken);
         Task<Result> DeleteEntryAsync(int id, string userId, CancellationToken cancellationToken);
 

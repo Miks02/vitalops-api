@@ -20,45 +20,43 @@ namespace VitalOps.API.Services.Implementations
             _logger = logger;
         }
 
-        public async Task<WeightSummaryDto?> GetUserWeightSummaryAsync(string userId, CancellationToken cancellationToken)
+        public async Task<WeightSummaryDto?> GetUserWeightSummaryAsync(
+            string userId, 
+            int? month = null, 
+            int? year = null,
+            CancellationToken cancellationToken = default)
         {
-            var entries = await _context.WeightEntries
+            var hasEntries = await _context.WeightEntries
                 .AsNoTracking()
-                .OrderByDescending(w => w.CreatedAt)
                 .Where(w => w.UserId == userId)
-                .Select(w => new WeightEntryDetailsDto()
-                {
-                    Id = w.Id,
-                    Weight = w.Weight,
-                    Time = w.Time,
-                    Notes = w.Notes
-                })
-                .ToListAsync(cancellationToken);
+                .AnyAsync(cancellationToken);
 
-            if (entries.Count == 0)
+            if (!hasEntries)
                 return null;
 
             var firstWeightEntry = await _context.WeightEntries
                 .AsNoTracking()
-                .OrderBy(w => w.CreatedAt)
                 .Where(w => w.UserId == userId)
+                .OrderBy(w => w.CreatedAt)
                 .Select(w => new WeightRecordDto()
                 {
                     Weight = w.Weight,
-                    CreatedAt = w.CreatedAt
+                    CreatedAt = w.CreatedAt               
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 
             var lastWeightEntry = await _context.WeightEntries
                 .AsNoTracking()
-                .OrderByDescending(w => w.CreatedAt)
                 .Where(w => w.UserId == userId)
+                .OrderByDescending(w => w.CreatedAt)
                 .Select(w => new WeightRecordDto()
                 {
                     Weight = w.Weight,
                     CreatedAt = w.CreatedAt
                 })
                 .FirstOrDefaultAsync(cancellationToken);
+
+            var weightLogs = await GetUserWeightLogsAsync(userId, month, year, cancellationToken);
 
             var progress = lastWeightEntry!.Weight - firstWeightEntry!.Weight;
 
@@ -67,8 +65,17 @@ namespace VitalOps.API.Services.Implementations
                 FirstEntry = firstWeightEntry,
                 CurrentWeight = lastWeightEntry,
                 Progress = progress,
-                WeightEntries = entries
+                WeightLogs = weightLogs,
             };
+        }
+
+        public async Task<IReadOnlyList<WeightRecordDto>> GetUserWeightLogsAsync(
+            string userId,
+            int? month = null,
+            int? year = null,
+            CancellationToken cancellationToken = default)
+        {
+            return await BuildWeightEntriesQuery(userId, month, year).ToListAsync(cancellationToken);
         }
 
         public async Task<Result<WeightEntryDetailsDto>> AddWeightEntryAsync(
@@ -143,7 +150,6 @@ namespace VitalOps.API.Services.Implementations
             if (entry is null)
                 return Result.Failure(Error.Resource.NotFound("Weight entry"));
 
-
             await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
 
             try
@@ -176,6 +182,32 @@ namespace VitalOps.API.Services.Implementations
             }
 
             return Result.Success();
+        }
+
+        private IQueryable<WeightRecordDto> BuildWeightEntriesQuery(
+            string userId, 
+            int? month = null, 
+            int? year = null)
+        {
+            var query = _context.WeightEntries
+                .AsNoTracking()
+                .OrderByDescending(w => w.CreatedAt)
+                .Where(w => w.UserId == userId)
+                .Select(w => new WeightRecordDto()
+                {
+                    Id = w.Id,
+                    Weight = w.Weight,
+                    TimeLogged = w.Time,
+                    CreatedAt = w.CreatedAt
+                });
+
+            month ??= DateTime.UtcNow.Month;
+
+            year ??= DateTime.UtcNow.Year;
+
+            query = query.Where(w => w.CreatedAt.Year == year && w.CreatedAt.Month == month);
+            
+            return query;
         }
 
         private async Task<double?> GetLastWeightFromUser(string userId, CancellationToken cancellationToken)
