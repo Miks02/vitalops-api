@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using VitalOps.API.Data;
 using VitalOps.API.DTO.Weight;
 using VitalOps.API.Models;
@@ -56,7 +57,9 @@ namespace VitalOps.API.Services.Implementations
                 })
                 .FirstOrDefaultAsync(cancellationToken);
 
-            var weightLogs = await GetUserWeightLogsAsync(userId, month, year, cancellationToken);
+            var weightEntryYears = await GetUserWeightEntryYearsAsync(userId, cancellationToken);
+
+            var weightListDetails = await GetUserWeightLogsAsync(userId, month, year, cancellationToken);
 
             var progress = lastWeightEntry!.Weight - firstWeightEntry!.Weight;
 
@@ -65,17 +68,24 @@ namespace VitalOps.API.Services.Implementations
                 FirstEntry = firstWeightEntry,
                 CurrentWeight = lastWeightEntry,
                 Progress = progress,
-                WeightLogs = weightLogs,
+                Years = weightEntryYears,
+                WeightListDetails = weightListDetails
             };
         }
 
-        public async Task<IReadOnlyList<WeightRecordDto>> GetUserWeightLogsAsync(
+        public async Task<WeightListDetails> GetUserWeightLogsAsync(
             string userId,
             int? month = null,
             int? year = null,
             CancellationToken cancellationToken = default)
         {
-            return await BuildWeightEntriesQuery(userId, month, year).ToListAsync(cancellationToken);
+
+            return new WeightListDetails()
+            {
+                WeightLogs = await BuildWeightEntriesQuery(userId, month, year).ToListAsync(cancellationToken),
+                Months = await GetUserWeightEntryMonthsByYearAsync(userId, year ?? DateTime.UtcNow.Year,
+                    cancellationToken)
+            };
         }
 
         public async Task<WeightEntryDetailsDto?> GetUserWeightEntryByIdAsync(string userId, int id)
@@ -185,8 +195,6 @@ namespace VitalOps.API.Services.Implementations
 
                 user.CurrentWeight = await GetLastWeightFromUser(user.Id, cancellationToken);
 
-                _logger.LogInformation("Current weight: {weight}", user.CurrentWeight);
-
                 await _context.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
             }
@@ -238,6 +246,30 @@ namespace VitalOps.API.Services.Implementations
                 return null;
 
             return lastWeight;
+        }
+
+        private async Task<IReadOnlyList<int>> GetUserWeightEntryYearsAsync(
+            string userId,
+            CancellationToken cancellationToken)
+        {
+            return await _context.WeightEntries
+                .AsNoTracking()
+                .Where(w => w.UserId == userId)
+                .Select(w => w.CreatedAt.Year)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+        }
+
+        private async Task<IReadOnlyList<int>> GetUserWeightEntryMonthsByYearAsync(
+            string userId, 
+            int year,
+            CancellationToken cancellationToken)
+        {
+            return await _context.WeightEntries
+                .Where(w => w.UserId == userId && w.CreatedAt.Year == year)
+                .Select(w => w.CreatedAt.Month)
+                .Distinct()
+                .ToListAsync(cancellationToken);
         }
 
     }
