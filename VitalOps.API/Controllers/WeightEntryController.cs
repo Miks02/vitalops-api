@@ -19,9 +19,9 @@ namespace VitalOps.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<WeightSummaryDto?>> GetMyWeightSummary(int? year = null, int? month = null, CancellationToken cancellationToken = default)
+        public async Task<ActionResult<WeightSummaryDto?>> GetMyWeightSummary(int? year = null, int? month = null, double? targetWeight = null, CancellationToken cancellationToken = default)
         {
-            return await _weightService.GetUserWeightSummaryAsync(CurrentUserId, year, month, cancellationToken);
+            return await _weightService.GetUserWeightSummaryAsync(CurrentUserId, year, month, targetWeight, cancellationToken);
         }
 
         [HttpGet("logs")]
@@ -35,8 +35,13 @@ namespace VitalOps.API.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult<WeightEntryDetailsDto?>> GetMyWeightLog([FromRoute] int id)
         {
-
             return await _weightService.GetUserWeightEntryByIdAsync(CurrentUserId, id);
+        }
+
+        [HttpGet("weight-chart")]
+        public async Task<ActionResult<WeightChartDto>> GetMyWeightChart([FromQuery] double? targetWeight, CancellationToken cancellationToken = default)
+        {
+            return await _weightService.GetUserWeightChartAsync(CurrentUserId, targetWeight, cancellationToken);
         }
 
         [HttpPost]
