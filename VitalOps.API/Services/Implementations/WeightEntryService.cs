@@ -33,7 +33,18 @@ namespace VitalOps.API.Services.Implementations
                 .AnyAsync(cancellationToken);
 
             if (!hasEntries)
-                return null;
+                return new WeightSummaryDto()
+                {
+                    FirstEntry = new WeightRecordDto(),
+                    CurrentWeight = new CurrentWeightDto(),
+                    Years = [],
+                    WeightListDetails = new WeightListDetails()
+                    {
+                        WeightLogs = [],
+                        Months = []
+                    },
+                    WeightChart = new WeightChartDto()
+                };
 
             var firstWeightEntry = await _context.WeightEntries
                 .AsNoTracking()
@@ -68,7 +79,11 @@ namespace VitalOps.API.Services.Implementations
             return new WeightSummaryDto()
             {
                 FirstEntry = firstWeightEntry,
-                CurrentWeight = lastWeightEntry,
+                CurrentWeight = new CurrentWeightDto()
+                {
+                    Weight = lastWeightEntry.Weight,
+                    CreatedAt = lastWeightEntry.CreatedAt
+                },
                 Progress = progress,
                 Years = weightEntryYears,
                 WeightListDetails = weightListDetails,
@@ -224,6 +239,8 @@ namespace VitalOps.API.Services.Implementations
                 }
 
                 user.CurrentWeight = await GetLastWeightFromUser(user.Id, cancellationToken);
+
+                _logger.LogInformation("User's current weight: {weight}", user.CurrentWeight);
 
                 await _context.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
