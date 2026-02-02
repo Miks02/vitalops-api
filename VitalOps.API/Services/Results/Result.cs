@@ -25,6 +25,16 @@ public class Result
 
     }
 
+    public static Result Failure(params IdentityError[] identityErrors)
+    {
+        if (identityErrors.Length == 0)
+            throw new ArgumentException("At least one error must be provided within a failure");
+
+        var errors = identityErrors.Select(e => new Error(e.Code, e.Description)).ToList();
+
+        return new Result(false, errors.AsReadOnly());
+    }
+
 }
 
 public class Result<T> : Result
@@ -61,6 +71,16 @@ public class Result<T> : Result
         return new Result<T>(false, errors.AsReadOnly());
     }
 
-    
+    public new static Result<T> Failure(params IdentityError[] identityErrors)
+    {
+        if (identityErrors.Length == 0)
+            throw new ArgumentException("At least one error must be provided within a failure");
+
+        var errors = identityErrors.Select(e => new Error(e.Code, e.Description)).ToList();
+
+        return new Result<T>(false, errors.AsReadOnly());
+    }
+
+
 
 }

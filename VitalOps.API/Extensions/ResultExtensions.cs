@@ -81,6 +81,11 @@ public static class ResultExtensions
             "InvalidUserName" => Error.Validation.InvalidInput($"Provided username is not valid {error.Description}"),
             "DuplicateEmail" => Error.User.EmailAlreadyExists(),
             "InvalidEmail" => Error.Validation.InvalidInput($"Provided email address is not valid {error.Description}"),
+            "PasswordMismatch" => Error.Auth.InvalidCurrentPassword(),
+            "PasswordTooShort" => Error.Auth.PasswordTooShort(),
+            "PasswordRequiresDigit" => Error.Auth.PasswordRequiresDigit(),
+            "PasswordRequiresUpper" => Error.Auth.PasswordRequiresUpper(),
+            "PasswordRequiresNonAlphanumeric" => Error.Auth.PasswordRequiresNonAlphanumeric(),
             _ => new Error(error.Code, error.Description)
         };
     }
