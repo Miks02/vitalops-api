@@ -116,6 +116,29 @@ public class AuthService : IAuthService
         return Result<AuthResponseDto>.Success(responseDto);
     }
 
+    public async Task<Result> UpdatePasswordAsync(
+        string userId, 
+        UpdatePasswordDto request,
+        CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+
+        if (user is null)
+            return Result.Failure(Error.User.NotFound(userId));
+
+        var changePasswordResult = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+
+        if (!changePasswordResult.Succeeded)
+        {
+            _logger.LogWarning("Error occurred while trying to change user's password {id}", userId);
+            return Result.Failure(changePasswordResult.Errors.ToArray());
+        }
+
+        var logoutResult = await LogoutAsync(user.RefreshToken!, cancellationToken);
+
+        return logoutResult.HandleResult(_logger);
+    }
+
     public async Task<Result<AuthResponseDto>> RotateAuthTokens(
         string refreshToken,
         CancellationToken cancellationToken = default)

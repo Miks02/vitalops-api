@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NuGet.Packaging;
@@ -44,9 +43,9 @@ namespace VitalOps.API.Controllers
         }
 
         [HttpPost("logout")]
-        public async Task<ActionResult> Logout()
+        public async Task<ActionResult> Logout(CancellationToken cancellationToken = default)
         {
-            var result = await _authService.LogoutAsync(GetRefreshToken());
+            var result = await _authService.LogoutAsync(GetRefreshToken(), cancellationToken);
 
             DeleteRefreshTokenCookie();
 
@@ -73,6 +72,13 @@ namespace VitalOps.API.Controllers
             var result = await _authService.RotateAuthTokens(refreshToken, cancellationToken);
 
             return HandleRefreshToken(result);
+        }
+
+        [HttpPost("password")]
+        public async Task<ActionResult> UpdatePassword(UpdatePasswordDto request, CancellationToken cancellationToken = default)
+        {
+            var result = await _authService.UpdatePasswordAsync(CurrentUserId, request, cancellationToken);
+            return result.ToActionResult();
         }
 
         private ActionResult HandleRefreshToken(Result<AuthResponseDto> result)
