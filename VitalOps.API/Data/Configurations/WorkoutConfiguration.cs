@@ -18,7 +18,7 @@ public class WorkoutConfiguration : IEntityTypeConfiguration<Workout>
         builder.HasIndex(p => p.Name);
         
         builder.Property(p => p.CreatedAt)
-            .HasDefaultValueSql("GETUTCDATE()");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
         builder
             .HasOne(w => w.User)

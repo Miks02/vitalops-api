@@ -2,9 +2,9 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VitalOps.API.Data;
 
 #nullable disable
@@ -12,8 +12,8 @@ using VitalOps.API.Data;
 namespace VitalOps.API.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251207093310_ModifyWorkoutAndExerciseConfigurations")]
-    partial class ModifyWorkoutAndExerciseConfigurations
+    [Migration("20260202190416_InitialPostgresMigration")]
+    partial class InitialPostgresMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,33 +21,32 @@ namespace VitalOps.API.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.0")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedName")
                         .IsUnique()
-                        .HasDatabaseName("RoleNameIndex")
-                        .HasFilter("[NormalizedName] IS NOT NULL");
+                        .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("Roles", (string)null);
                 });
@@ -56,19 +55,19 @@ namespace VitalOps.API.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RoleId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -81,19 +80,19 @@ namespace VitalOps.API.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -105,17 +104,17 @@ namespace VitalOps.API.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -127,10 +126,10 @@ namespace VitalOps.API.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RoleId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -142,46 +141,46 @@ namespace VitalOps.API.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("UserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("WorkoutTrackerApi.Models.CalorieEntry", b =>
+            modelBuilder.Entity("VitalOps.API.Models.CalorieEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Calories")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
+                        .HasColumnType("character varying(512)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -189,40 +188,61 @@ namespace VitalOps.API.Migrations
 
                     b.ToTable("CalorieEntries", t =>
                         {
-                            t.HasCheckConstraint("CK_CalorieEntrys_Calories_Positive", "Calories > 0");
+                            t.HasCheckConstraint("CK_CalorieEntrys_Calories_Positive", "\"Calories\" > 0");
                         });
                 });
 
-            modelBuilder.Entity("WorkoutTrackerApi.Models.ExerciseEntry", b =>
+            modelBuilder.Entity("VitalOps.API.Models.ExerciseEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("AvgHeartRate")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<double?>("CaloriesBurned")
-                        .HasColumnType("float");
+                        .HasPrecision(7, 2)
+                        .HasColumnType("double precision");
+
+                    b.Property<int?>("CardioType")
+                        .HasColumnType("integer");
 
                     b.Property<double?>("DistanceKm")
-                        .HasColumnType("float");
+                        .HasPrecision(5, 2)
+                        .HasColumnType("double precision");
 
                     b.Property<TimeSpan?>("Duration")
-                        .HasColumnType("time");
+                        .HasColumnType("interval");
 
                     b.Property<int>("ExerciseType")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("IntervalsCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MaxHeartRate")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<double?>("PaceMinPerKm")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("double precision");
+
+                    b.Property<int?>("RestIntervalSec")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("WorkIntervalSec")
+                        .HasColumnType("integer");
 
                     b.Property<int>("WorkoutId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -232,30 +252,36 @@ namespace VitalOps.API.Migrations
 
                     b.ToTable("ExerciseEntries", t =>
                         {
-                            t.HasCheckConstraint("CK_ExerciseEntrys_AvgHeartRate_Positive", "AvgHeartRate > 0");
+                            t.HasCheckConstraint("CK_ExerciseEntrys_AvgHeartRate_Positive", "\"AvgHeartRate\" > 0");
 
-                            t.HasCheckConstraint("CK_ExerciseEntrys_CaloriesBurned_Positive", "CaloriesBurned > 0");
+                            t.HasCheckConstraint("CK_ExerciseEntrys_IntervalsCount_Positive", "\"IntervalsCount\" > 0");
 
-                            t.HasCheckConstraint("CK_ExerciseEntrys_DistanceKm_Positive", "DistanceKm > 0");
+                            t.HasCheckConstraint("CK_ExerciseEntrys_MaxHeartRate_GreaterThan_AvgHeartRate", "\"MaxHeartRate\" >= \"AvgHeartRate\"");
+
+                            t.HasCheckConstraint("CK_ExerciseEntrys_MaxHeartRate_Positive", "\"MaxHeartRate\" > 0");
+
+                            t.HasCheckConstraint("CK_ExerciseEntrys_RestIntervalSec_Positive", "\"RestIntervalSec\" > 0");
+
+                            t.HasCheckConstraint("CK_ExerciseEntrys_WorkIntervalSec_Positive", "\"WorkIntervalSec\" > 0");
                         });
                 });
 
-            modelBuilder.Entity("WorkoutTrackerApi.Models.SetEntry", b =>
+            modelBuilder.Entity("VitalOps.API.Models.SetEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("ExerciseEntryId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("Reps")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<double>("WeightKg")
-                        .HasColumnType("float");
+                        .HasColumnType("double precision");
 
                     b.HasKey("Id");
 
@@ -263,151 +289,200 @@ namespace VitalOps.API.Migrations
 
                     b.ToTable("SetEntries", t =>
                         {
-                            t.HasCheckConstraint("CK_SetEntrys_Reps_Positive", "Reps > 0");
+                            t.HasCheckConstraint("CK_SetEntrys_Reps_Positive", "\"Reps\" > 0");
 
-                            t.HasCheckConstraint("CK_SetEntrys_WeightKg_Positive", "WeightKg > 0");
+                            t.HasCheckConstraint("CK_SetEntrys_WeightKg_Positive", "\"WeightKg\" > 0");
                         });
                 });
 
-            modelBuilder.Entity("WorkoutTrackerApi.Models.User", b =>
+            modelBuilder.Entity("VitalOps.API.Models.User", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    b.Property<int?>("ActivityLevel")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Age")
-                        .HasColumnType("int");
+                    b.Property<int>("AccountStatus")
+                        .HasColumnType("integer");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<double?>("CurrentWeight")
+                        .HasColumnType("double precision");
 
                     b.Property<int?>("DailyCalorieGoal")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<int?>("Gender")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<double?>("HeightCm")
-                        .HasColumnType("float");
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("ImagePath")
+                        .HasColumnType("text");
 
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("character varying(20)");
 
                     b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("RefreshToken")
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
+
+                    b.Property<double?>("TargetWeight")
+                        .HasColumnType("double precision");
 
                     b.Property<DateTime?>("TokenExpDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<double?>("WeightKg")
-                        .HasColumnType("float");
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
-                        .IsUnique()
-                        .HasFilter("[Email] IS NOT NULL");
+                        .IsUnique();
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
-                        .HasDatabaseName("UserNameIndex")
-                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+                        .HasDatabaseName("UserNameIndex");
 
                     b.HasIndex("UserName")
-                        .IsUnique()
-                        .HasFilter("[UserName] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("WorkoutTrackerApi.Models.Workout", b =>
+            modelBuilder.Entity("VitalOps.API.Models.WeightEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<TimeSpan>("Time")
+                        .HasColumnType("interval");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double>("Weight")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Weight");
+
+                    b.ToTable("WeightEntries", t =>
+                        {
+                            t.HasCheckConstraint("CK_WeightEntrys_Weight_LessThan400", "\"Weight\" < 400");
+
+                            t.HasCheckConstraint("CK_WeightEntrys_Weight_Positive", "\"Weight\" > 25");
+                        });
+                });
+
+            modelBuilder.Entity("VitalOps.API.Models.Workout", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Notes")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("WorkoutDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -429,7 +504,7 @@ namespace VitalOps.API.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("WorkoutTrackerApi.Models.User", null)
+                    b.HasOne("VitalOps.API.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -438,7 +513,7 @@ namespace VitalOps.API.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("WorkoutTrackerApi.Models.User", null)
+                    b.HasOne("VitalOps.API.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -453,7 +528,7 @@ namespace VitalOps.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("WorkoutTrackerApi.Models.User", null)
+                    b.HasOne("VitalOps.API.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -462,16 +537,16 @@ namespace VitalOps.API.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("WorkoutTrackerApi.Models.User", null)
+                    b.HasOne("VitalOps.API.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("WorkoutTrackerApi.Models.CalorieEntry", b =>
+            modelBuilder.Entity("VitalOps.API.Models.CalorieEntry", b =>
                 {
-                    b.HasOne("WorkoutTrackerApi.Models.User", "User")
+                    b.HasOne("VitalOps.API.Models.User", "User")
                         .WithMany("CalorieEntries")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -480,9 +555,9 @@ namespace VitalOps.API.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("WorkoutTrackerApi.Models.ExerciseEntry", b =>
+            modelBuilder.Entity("VitalOps.API.Models.ExerciseEntry", b =>
                 {
-                    b.HasOne("WorkoutTrackerApi.Models.Workout", "Workout")
+                    b.HasOne("VitalOps.API.Models.Workout", "Workout")
                         .WithMany("ExerciseEntries")
                         .HasForeignKey("WorkoutId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -491,9 +566,9 @@ namespace VitalOps.API.Migrations
                     b.Navigation("Workout");
                 });
 
-            modelBuilder.Entity("WorkoutTrackerApi.Models.SetEntry", b =>
+            modelBuilder.Entity("VitalOps.API.Models.SetEntry", b =>
                 {
-                    b.HasOne("WorkoutTrackerApi.Models.ExerciseEntry", "ExerciseEntry")
+                    b.HasOne("VitalOps.API.Models.ExerciseEntry", "ExerciseEntry")
                         .WithMany("Sets")
                         .HasForeignKey("ExerciseEntryId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -502,9 +577,20 @@ namespace VitalOps.API.Migrations
                     b.Navigation("ExerciseEntry");
                 });
 
-            modelBuilder.Entity("WorkoutTrackerApi.Models.Workout", b =>
+            modelBuilder.Entity("VitalOps.API.Models.WeightEntry", b =>
                 {
-                    b.HasOne("WorkoutTrackerApi.Models.User", "User")
+                    b.HasOne("VitalOps.API.Models.User", "User")
+                        .WithMany("WeightEntries")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("VitalOps.API.Models.Workout", b =>
+                {
+                    b.HasOne("VitalOps.API.Models.User", "User")
                         .WithMany("Workouts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -513,19 +599,21 @@ namespace VitalOps.API.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("WorkoutTrackerApi.Models.ExerciseEntry", b =>
+            modelBuilder.Entity("VitalOps.API.Models.ExerciseEntry", b =>
                 {
                     b.Navigation("Sets");
                 });
 
-            modelBuilder.Entity("WorkoutTrackerApi.Models.User", b =>
+            modelBuilder.Entity("VitalOps.API.Models.User", b =>
                 {
                     b.Navigation("CalorieEntries");
+
+                    b.Navigation("WeightEntries");
 
                     b.Navigation("Workouts");
                 });
 
-            modelBuilder.Entity("WorkoutTrackerApi.Models.Workout", b =>
+            modelBuilder.Entity("VitalOps.API.Models.Workout", b =>
                 {
                     b.Navigation("ExerciseEntries");
                 });

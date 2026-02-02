@@ -1,4 +1,3 @@
-using Microsoft.Build.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using VitalOps.API.Models;
@@ -40,7 +39,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsUnique();
         
         builder.Property(p => p.CreatedAt)
-            .HasDefaultValueSql("GETUTCDATE()");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
         builder
             .HasMany(u => u.Workouts)

@@ -16,7 +16,7 @@ namespace VitalOps.API.Data.Configurations
             builder.HasIndex(x => x.CreatedAt);
 
             builder.Property(x => x.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("CURRENT_TIMESTAMP");
             
             builder
                 .HasOne(w => w.User)
@@ -24,8 +24,8 @@ namespace VitalOps.API.Data.Configurations
                 .HasForeignKey(w => w.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.ToTable(entries => entries.HasCheckConstraint($"CK_{nameof(WeightEntry)}s_{nameof(WeightEntry.Weight)}_Positive", "Weight > 25"));
-            builder.ToTable(entries => entries.HasCheckConstraint($"CK_{nameof(WeightEntry)}s_{nameof(WeightEntry.Weight)}_LessThan400", "Weight < 400"));
+            builder.ToTable(entries => entries.HasCheckConstraint($"CK_{nameof(WeightEntry)}s_{nameof(WeightEntry.Weight)}_Positive", "\"Weight\" > 25"));
+            builder.ToTable(entries => entries.HasCheckConstraint($"CK_{nameof(WeightEntry)}s_{nameof(WeightEntry.Weight)}_LessThan400", "\"Weight\" < 400"));
 
 
         }

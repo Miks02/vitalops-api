@@ -13,9 +13,9 @@ public class CalorieEntryConfiguration : IEntityTypeConfiguration<CalorieEntry>
         
 
         builder.Property(p => p.CreatedAt)
-            .HasDefaultValueSql("GETUTCDATE()");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-        builder.ToTable(entries => entries.HasCheckConstraint($"CK_{nameof(CalorieEntry)}s_{nameof(CalorieEntry.Calories)}_Positive", "Calories > 0"));
+        builder.ToTable(entries => entries.HasCheckConstraint($"CK_{nameof(CalorieEntry)}s_{nameof(CalorieEntry.Calories)}_Positive", "\"Calories\" > 0"));
 
         builder
             .HasOne(c => c.User)
