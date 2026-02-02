@@ -71,6 +71,14 @@ public class UserService : IUserService
         if(user is null)
             return Result.Failure(Error.User.NotFound());
 
+        if (string.IsNullOrWhiteSpace(user.ImagePath)) 
+            return await DeleteUserAsync(user);
+        
+        var fileRemovalResult = _fileService.DeleteFile(user.ImagePath);
+
+        if (!fileRemovalResult.IsSucceeded)
+            return Result.Failure(fileRemovalResult.Errors.ToArray());
+
         return await DeleteUserAsync(user);
     }
 

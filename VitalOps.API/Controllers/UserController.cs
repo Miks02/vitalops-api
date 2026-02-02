@@ -113,6 +113,13 @@ namespace VitalOps.API.Controllers
             var deleteResult = await _userService.DeleteProfilePictureAsync(CurrentUserId, cancellationToken);
             return deleteResult.ToActionResult();
         }
+
+        [HttpDelete]
+        public async Task<ActionResult> DeleteAccount(CancellationToken cancellationToken = default)
+        {
+            var deleteResult = await _userService.DeleteUserAsync(CurrentUserId, cancellationToken);
+            return deleteResult.ToActionResult();
+        }
     }
 
 
