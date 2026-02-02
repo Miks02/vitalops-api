@@ -96,7 +96,6 @@ namespace VitalOps.API.Controllers
 
             var updateResult = await _userService.UpdateTargetWeightAsync(targetWeight, CurrentUserId, cancellationToken);
             return updateResult.ToActionResult();
-
         }
 
         [HttpPatch("profile-picture")]
@@ -106,6 +105,13 @@ namespace VitalOps.API.Controllers
         {
             var updateResult = await _userService.UpdateProfilePictureAsync(imageFile, CurrentUserId, cancellationToken);
             return updateResult.ToActionResult();
+        }
+
+        [HttpDelete("profile-picture")]
+        public async Task<ActionResult> RemoveProfilePicture(CancellationToken cancellationToken = default)
+        {
+            var deleteResult = await _userService.DeleteProfilePictureAsync(CurrentUserId, cancellationToken);
+            return deleteResult.ToActionResult();
         }
     }
 

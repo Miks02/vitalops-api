@@ -11,7 +11,7 @@ public interface IUserService
 
     Task<Result> DeleteUserAsync(User user);
     Task<Result> DeleteUserAsync(string id, CancellationToken cancellation = default);
-    Task<Result> DeleteProfilePicture(string userId, CancellationToken cancellationToken = default);
+    Task<Result> DeleteProfilePictureAsync(string userId, CancellationToken cancellationToken = default);
 
     Task<Result<DateTime>> UpdateDateOfBirthAsync(UpdateDateOfBirthDto dto, string userId, CancellationToken cancellationToken = default);
     Task<Result<double>> UpdateHeightAsync(UpdateHeightDto dto, string userId, CancellationToken cancellationToken = default);

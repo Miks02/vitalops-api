@@ -76,7 +76,7 @@ public class UserService : IUserService
         return await DeleteUserAsync(user);
     }
 
-    public async Task<Result> DeleteProfilePicture(string userId, CancellationToken cancellationToken = default)
+    public async Task<Result> DeleteProfilePictureAsync(string userId, CancellationToken cancellationToken = default)
     {
         var user = await GetUserForUpdateAsync(userId, cancellationToken);
 
