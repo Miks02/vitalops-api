@@ -1,5 +1,7 @@
 using System.Reflection;
+using System.Security.Claims;
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VitalOps.API.Data;
@@ -7,7 +9,6 @@ using VitalOps.API.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using VitalOps.API.Exceptions.Handlers;
@@ -95,6 +96,56 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
+        var hasMetadata = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter);
+
+        var detailMessage = hasMetadata
+            ? $"Request limit reached, try again after {retryAfter.TotalSeconds} seconds"
+            : "Request limit reached, please try again later.";
+
+        var problem = new ProblemDetails()
+        {
+            Title = "Too many requests",
+            Detail = detailMessage,
+            Status = options.RejectionStatusCode,
+            Instance = context.HttpContext.Request.Path
+        };
+
+        if (hasMetadata)
+        {
+            context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+            problem.Extensions["RetryAfter"] = retryAfter.TotalSeconds;
+        }
+
+        await context.HttpContext.Response.WriteAsJsonAsync(problem, token);
+    };
+    
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        var partitionKey = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(partitionKey))
+            partitionKey = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        Console.WriteLine(partitionKey);
+
+        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions()
+        {
+            PermitLimit = 100,
+            Window = TimeSpan.FromSeconds(45)
+        });
+
+    });
+
+});
+
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>();
@@ -132,6 +183,8 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseRateLimiter();
 
 app.MapControllers();
 
