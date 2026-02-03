@@ -9,6 +9,7 @@ using VitalOps.API.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Build.Utilities;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using VitalOps.API.Exceptions.Handlers;
@@ -162,6 +163,18 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
     app.UseCors("AllowCors");
+}
+
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var context = services.GetRequiredService<AppDbContext>();
+
+    context.Database.Migrate();
+
+    Console.WriteLine("Database migrated successfully");
 }
 
 app.UseStaticFiles();
