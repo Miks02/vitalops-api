@@ -44,11 +44,7 @@ Rider.Backend.log
 
 # Local configuration files
 appsettings.Development.json
-appsettings.Staging.json
-appsettings.Production.json
-appsettings.json
 connectionstrings.json
-launchSettings.json
 
 # Test results
 TestResults/
