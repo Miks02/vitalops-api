@@ -1,19 +1,20 @@
+using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Build.Utilities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using VitalOps.API.Data;
-using VitalOps.API.Models;
-using FluentValidation;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Build.Utilities;
-using Microsoft.IdentityModel.Tokens;
-using Scalar.AspNetCore;
 using VitalOps.API.Exceptions.Handlers;
 using VitalOps.API.Filters;
+using VitalOps.API.Models;
 using VitalOps.API.Services.Implementations;
 using VitalOps.API.Services.Interfaces;
 
@@ -177,6 +178,15 @@ using (var scope = app.Services.CreateScope())
     Console.WriteLine("Database migrated successfully");
 }
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
+app.UseForwardedHeaders();
+
 app.UseStaticFiles();
 
 app.Use(async (context, next) =>
@@ -192,7 +202,6 @@ app.Use(async (context, next) =>
 });
 
 app.UseExceptionHandler();
-app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
