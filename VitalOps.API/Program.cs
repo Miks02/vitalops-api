@@ -154,6 +154,13 @@ builder.Services.AddControllers(options =>
     options.Filters.Add<ProblemDetailsFilter>();
 });
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
 builder.Services.AddOpenApi("v1");
@@ -177,13 +184,6 @@ using (var scope = app.Services.CreateScope())
 
     Console.WriteLine("Database migrated successfully");
 }
-
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownNetworks.Clear();
-    options.KnownProxies.Clear();
-});
 
 app.UseForwardedHeaders();
 
