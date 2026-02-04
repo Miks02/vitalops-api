@@ -1,3 +1,4 @@
+using CloudinaryDotNet;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -12,6 +13,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
 using VitalOps.API.Data;
+using VitalOps.API.DTO.Global;
 using VitalOps.API.Exceptions.Handlers;
 using VitalOps.API.Filters;
 using VitalOps.API.Models;
@@ -49,6 +51,17 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+
+var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings").Get<CloudinarySettings>();
+var account = new Account(
+    cloudinarySettings!.CloudName,
+    cloudinarySettings.ApiKey,
+    cloudinarySettings.ApiSecret
+);
+var cloudinary = new Cloudinary(account);
+
+builder.Services.AddSingleton(cloudinary);
 
 builder.Services
     .AddScoped<IUserService, UserService>()
@@ -58,7 +71,7 @@ builder.Services
     .AddScoped<IProfileService, ProfileService>()
     .AddScoped<IDashboardService, DashboardService>()
     .AddScoped<IWeightEntryService, WeightEntryService>()
-    .AddScoped<IFileService, FileService>();
+    .AddScoped<IFileService, CloudinaryFileService>();
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
