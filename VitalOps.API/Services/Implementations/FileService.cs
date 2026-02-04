@@ -89,7 +89,7 @@ namespace VitalOps.API.Services.Implementations
             if (fileSize > maxFileSize)
                 return Result.Failure(Error.File.TooLarge(maxFileSize));
 
-            var allowedExtensions = new[] { ".jpg", "jpeg", ".png" };
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
 
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
