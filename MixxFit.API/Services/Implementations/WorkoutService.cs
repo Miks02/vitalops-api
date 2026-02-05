@@ -110,10 +110,10 @@ public class WorkoutService : IWorkoutService
     {
         var years = await _context.Workouts
             .AsNoTracking()
-            .OrderByDescending(w => w.WorkoutDate.Year)
             .Where(w => w.UserId == userId)
             .Select(w => w.WorkoutDate.Year)
             .Distinct()
+            .OrderByDescending(w => w)
             .ToListAsync();
 
         var selectedYear = year ?? DateTime.UtcNow.Year;

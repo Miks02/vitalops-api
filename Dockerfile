@@ -13,14 +13,13 @@ WORKDIR /src
 COPY ["MixxFit.API/MixxFit.API.csproj", "MixxFit.API/"]
 RUN dotnet restore "MixxFit.API/MixxFit.API.csproj"
 
+# Kopiramo sve ostalo
 COPY . .
 
-WORKDIR "/src/MixxFit.API"
-
-RUN dotnet build "." -c Release -o /app/build
+RUN dotnet build "MixxFit.API/MixxFit.API.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "." -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "MixxFit.API/MixxFit.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

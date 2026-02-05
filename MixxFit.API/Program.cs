@@ -158,9 +158,7 @@ builder.Services.AddRateLimiter(options =>
 
         if (string.IsNullOrEmpty(partitionKey))
             partitionKey = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-
-        Console.WriteLine(partitionKey);
-
+        
         return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions()
         {
             PermitLimit = 100,
