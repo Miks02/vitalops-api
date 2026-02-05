@@ -66,7 +66,6 @@ builder.Services.AddSingleton(cloudinary);
 builder.Services
     .AddScoped<IUserService, UserService>()
     .AddScoped<IAuthService, AuthService>()
-    .AddScoped<ICurrentUserService, CurrentUserService>()
     .AddScoped<IWorkoutService, WorkoutService>()
     .AddScoped<IProfileService, ProfileService>()
     .AddScoped<IDashboardService, DashboardService>()

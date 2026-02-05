@@ -16,7 +16,7 @@ namespace MixxFit.API.Services.Implementations
             _workoutService = workoutService;
         }
 
-        public async Task<ProfilePageDto> GetUserProfileAsync(string userId, CancellationToken cancellationToken = default)
+        public async Task<ProfilePageDto> GetProfileAsync(string userId, CancellationToken cancellationToken = default)
         {
             if(string.IsNullOrEmpty(userId))
                 throw new InvalidOperationException("CRITICAL ERROR: User Id is null");

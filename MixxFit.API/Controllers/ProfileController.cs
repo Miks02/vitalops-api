@@ -22,7 +22,7 @@ namespace MixxFit.API.Controllers
         [HttpGet]
         public async Task<ActionResult<ProfilePageDto>> GetMyProfile(CancellationToken cancellationToken = default)
         {
-            return await _profileService.GetUserProfileAsync(CurrentUserId, cancellationToken);
+            return await _profileService.GetProfileAsync(CurrentUserId, cancellationToken);
         }
     }
 }
