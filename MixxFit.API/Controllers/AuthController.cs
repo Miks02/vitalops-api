@@ -123,12 +123,6 @@ namespace MixxFit.API.Controllers
         {
             var allCookies = new Dictionary<string, string>();
             allCookies.AddRange(Request.Cookies);
-
-            foreach (var cookie in allCookies)
-            {
-                Console.WriteLine("Cookie: " + cookie);
-
-            }
             
             return Request.Cookies["refreshToken"] ?? "";
 
