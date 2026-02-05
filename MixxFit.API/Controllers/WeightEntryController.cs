@@ -21,13 +21,13 @@ namespace MixxFit.API.Controllers
         [HttpGet]
         public async Task<ActionResult<WeightSummaryDto?>> GetMyWeightSummary(int? year = null, int? month = null, double? targetWeight = null, CancellationToken cancellationToken = default)
         {
-            return await _weightService.GetUserWeightSummaryAsync(CurrentUserId, year, month, targetWeight, cancellationToken);
+            return await _weightService.GetWeightSummaryAsync(CurrentUserId, year, month, targetWeight, cancellationToken);
         }
 
         [HttpGet("logs")]
         public async Task<ActionResult> GetMyWeightLogs(int? month = null, int? year = null, CancellationToken cancellationToken = default)
         {
-            var logs = await _weightService.GetUserWeightLogsAsync(CurrentUserId, month, year, cancellationToken);
+            var logs = await _weightService.GetWeightLogsAsync(CurrentUserId, month, year, cancellationToken);
 
             return Ok(logs);
         }
@@ -35,13 +35,13 @@ namespace MixxFit.API.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult<WeightEntryDetailsDto?>> GetMyWeightLog([FromRoute] int id)
         {
-            return await _weightService.GetUserWeightEntryByIdAsync(CurrentUserId, id);
+            return await _weightService.GetWeightEntryByIdAsync(CurrentUserId, id);
         }
 
         [HttpGet("weight-chart")]
         public async Task<ActionResult<WeightChartDto>> GetMyWeightChart([FromQuery] double? targetWeight, CancellationToken cancellationToken = default)
         {
-            return await _weightService.GetUserWeightChartAsync(CurrentUserId, targetWeight, cancellationToken);
+            return await _weightService.GetWeightChartAsync(CurrentUserId, targetWeight, cancellationToken);
         }
 
         [HttpPost]

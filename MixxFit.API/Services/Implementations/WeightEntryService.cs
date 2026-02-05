@@ -20,7 +20,7 @@ namespace MixxFit.API.Services.Implementations
             _logger = logger;
         }
 
-        public async Task<WeightSummaryDto?> GetUserWeightSummaryAsync(
+        public async Task<WeightSummaryDto?> GetWeightSummaryAsync(
             string userId, 
             int? month = null, 
             int? year = null,
@@ -65,11 +65,11 @@ namespace MixxFit.API.Services.Implementations
 
             var weightEntryYears = await GetUserWeightEntryYearsAsync(userId, cancellationToken);
 
-            var weightListDetails = await GetUserWeightLogsAsync(userId, month, year, cancellationToken);
+            var weightListDetails = await GetWeightLogsAsync(userId, month, year, cancellationToken);
 
             var progress = lastWeightEntry!.Weight - firstWeightEntry!.Weight;
 
-            var weightChart = await GetUserWeightChartAsync(userId, targetWeight, cancellationToken);
+            var weightChart = await GetWeightChartAsync(userId, targetWeight, cancellationToken);
 
             return new WeightSummaryDto()
             {
@@ -86,7 +86,7 @@ namespace MixxFit.API.Services.Implementations
             };
         }
 
-        public async Task<WeightListDetails> GetUserWeightLogsAsync(
+        public async Task<WeightListDetails> GetWeightLogsAsync(
             string userId,
             int? month = null,
             int? year = null,
@@ -100,7 +100,7 @@ namespace MixxFit.API.Services.Implementations
             };
         }
 
-        public async Task<WeightEntryDetailsDto?> GetUserWeightEntryByIdAsync(string userId, int id)
+        public async Task<WeightEntryDetailsDto?> GetWeightEntryByIdAsync(string userId, int id)
         {
             return await _context.WeightEntries
                 .AsNoTracking()
@@ -116,7 +116,7 @@ namespace MixxFit.API.Services.Implementations
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<WeightChartDto> GetUserWeightChartAsync(
+        public async Task<WeightChartDto> GetWeightChartAsync(
             string userId,
             double? targetWeight,
             CancellationToken cancellationToken = default)
